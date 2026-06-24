@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+
+# Backups and PyInstaller
+*.bak
+*.spec
+dist/
+build/
+
+# HF Spaces uses its own Docker
+Dockerfile
+docker-compose.yml
+
+# Dev / IDE
+.devcontainer/
+.github/
+.vscode/
+.git/
+.gitkeep
+
+# Backup of old git history (do NOT upload)
+.git_old*/
+.git_quarantine_*/
+
+# Test artifacts
+test/
+tests/
+
+# Docs
+docs/
+
+# Local logs
+gradio.log
+gradio.log.err
+*.log
