@@ -4,6 +4,7 @@ import os
 # Detect Hugging Face Spaces runtime — it sets SPACE_ID env var
 IS_HF_SPACE = bool(os.environ.get("SPACE_ID"))
 
+import gradio as gr
 from demo.processor import IDPhotoProcessor
 from demo.ui import create_ui
 from hivision.creator.choose_handler import HUMAN_MATTING_MODELS
