@@ -103,5 +103,5 @@ if __name__ == "__main__":
         root_path=args.root_path,
         auth=auth,
         auth_message="🔐 Retoka - Inicia sesión para continuar",
-        share=False,
+        share=True,
     )
