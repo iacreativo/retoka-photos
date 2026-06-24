@@ -103,7 +103,6 @@ if __name__ == "__main__":
         root_path=args.root_path,
         auth=auth,
         auth_message="🔐 Retoka - Inicia sesión para continuar",
-        theme=gr.themes.Default(primary_hue=gr.themes.colors.blue, secondary_hue=gr.themes.colors.cyan),
         css=retoka_css,
         share=False,
         _frontend=False,  # Skip the localhost check on HF Spaces (proxy interference)
