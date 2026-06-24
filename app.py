@@ -1,5 +1,11 @@
 import argparse
 import os
+
+# Fix for Hugging Face Spaces: ensure localhost is not routed through proxy
+# (HF containers have proxy settings that break Gradio's localhost check)
+os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
+os.environ["NO_PROXY"] = "localhost,127.0.0.1,::1"
+
 from demo.processor import IDPhotoProcessor
 from demo.ui import create_ui
 from hivision.creator.choose_handler import HUMAN_MATTING_MODELS
