@@ -62,12 +62,13 @@ if __name__ == "__main__":
 
     processor = IDPhotoProcessor()
 
-    demo = create_ui(
+    demo, retoka_css = create_ui(
         processor,
         root_dir,
         HUMAN_MATTING_MODELS_CHOICE,
         FACE_DETECT_MODELS_CHOICE,
         LANGUAGE,
+        return_extras=True,
     )
 
     # 如果RUN_MODE是Beast，打印已开启野兽模式
@@ -101,6 +102,8 @@ if __name__ == "__main__":
         root_path=args.root_path,
         auth=auth,
         auth_message="🔐 Retoka - Inicia sesión para continuar",
+        theme=gr.themes.Default(primary_hue=gr.themes.colors.blue, secondary_hue=gr.themes.colors.cyan),
+        css=retoka_css,
         share=False,
         _frontend=False,  # Skip the localhost check on HF Spaces (proxy interference)
         debug=IS_HF_SPACE,  # Show errors on HF to debug

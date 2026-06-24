@@ -25,7 +25,10 @@ def create_ui(
     human_matting_models: list,
     face_detect_models: list,
     language: list,
+    return_extras: bool = False,
 ):
+    # When return_extras=True, returns (demo, css_string)
+    # When False (default), returns just demo (backward compat)
 
     # 加载环境变量DEFAULT_LANG, 如果有且在language中，则将DEFAULT_LANG设置为环境变量
     if "DEFAULT_LANG" in os.environ and os.environ["DEFAULT_LANG"] in language:
@@ -372,10 +375,9 @@ def create_ui(
     """
 
     # Use Gradio's native "Default" theme as base (light, predictable)
+    # NOTE: in Gradio 6+, theme/css should be passed to launch() instead of Blocks()
     demo = gr.Blocks(
         title="Retoka · Fotos de Identificación México",
-        theme=gr.themes.Default(primary_hue=gr.themes.colors.blue, secondary_hue=gr.themes.colors.cyan),
-        css=retoka_css,
     )
 
     with demo:
@@ -1111,4 +1113,6 @@ def create_ui(
                 ],
             )
 
+    if return_extras:
+        return demo, retoka_css
     return demo
