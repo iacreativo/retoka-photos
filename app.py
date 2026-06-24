@@ -1,10 +1,8 @@
 import argparse
 import os
 
-# Fix for Hugging Face Spaces: ensure localhost is not routed through proxy
-# (HF containers have proxy settings that break Gradio's localhost check)
-os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
-os.environ["NO_PROXY"] = "localhost,127.0.0.1,::1"
+# Detect Hugging Face Spaces runtime — it sets SPACE_ID env var
+IS_HF_SPACE = bool(os.environ.get("SPACE_ID"))
 
 from demo.processor import IDPhotoProcessor
 from demo.ui import create_ui
@@ -103,5 +101,5 @@ if __name__ == "__main__":
         root_path=args.root_path,
         auth=auth,
         auth_message="🔐 Retoka - Inicia sesión para continuar",
-        share=True,
+        share=IS_HF_SPACE,  # share=True on HF Spaces bypasses the localhost check
     )
