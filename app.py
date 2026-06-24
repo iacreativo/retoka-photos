@@ -103,4 +103,6 @@ if __name__ == "__main__":
         auth_message="🔐 Retoka - Inicia sesión para continuar",
         share=False,
         _frontend=False,  # Skip the localhost check on HF Spaces (proxy interference)
+        debug=IS_HF_SPACE,  # Show errors on HF to debug
+        quiet=not IS_HF_SPACE,
     )
