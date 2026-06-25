@@ -190,6 +190,35 @@ LOCALES = {
         "ko": {"label": "상단 거리"},
         "es": {"label": "Distancia al borde superior"},
     },
+    "head_height_ratio": {
+        "en": {"label": "Head height ratio"},
+        "zh": {"label": "头部高度比例"},
+        "ja": {"label": "頭部高さ比率"},
+        "ko": {"label": "머리 높이 비율"},
+        "es": {"label": "Posición vertical de la cabeza"},
+    },
+    "photo_standard": {
+        "en": {
+            "label": "Photo standard",
+            "choices": ["ICAO / Passport", "US Visa", "School / Children", "Custom"],
+        },
+        "zh": {
+            "label": "照片标准",
+            "choices": ["ICAO / 护照", "美国签证", "儿童 / 学校", "自定义"],
+        },
+        "ja": {
+            "label": "写真基準",
+            "choices": ["ICAO / パスポート", "米国ビザ", "子供 / 学校", "カスタム"],
+        },
+        "ko": {
+            "label": "사진 표준",
+            "choices": ["ICAO / 여권", "미국 비자", "어린이 / 학교", "사용자 지정"],
+        },
+        "es": {
+            "label": "Estándar de foto",
+            "choices": ["ICAO / Pasaporte", "Visa Americana", "Escolar / Niños", "Personalizado"],
+        },
+    },
     "image_kb": {
         "en": {"label": "Set KB size", "choices": ["Not Set", "Custom"]},
         "zh": {"label": "设置 KB 大小", "choices": ["不设置", "自定义"]},

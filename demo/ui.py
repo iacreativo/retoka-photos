@@ -490,12 +490,26 @@ def create_ui(
                 with gr.Tab(
                     LOCALES["advance_param"][DEFAULT_LANG]["label"]
                 ) as advance_parameter_tab:
+                    photo_standard_option = gr.Radio(
+                        choices=LOCALES["photo_standard"][DEFAULT_LANG]["choices"],
+                        label=LOCALES["photo_standard"][DEFAULT_LANG]["label"],
+                        value=LOCALES["photo_standard"][DEFAULT_LANG]["choices"][0],
+                        interactive=True,
+                    )
                     head_measure_ratio_option = gr.Slider(
                         minimum=0.1,
-                        maximum=0.5,
-                        value=0.2,
+                        maximum=0.7,
+                        value=0.50,
                         step=0.01,
                         label=LOCALES["head_measure_ratio"][DEFAULT_LANG]["label"],
+                        interactive=True,
+                    )
+                    head_height_ratio_option = gr.Slider(
+                        minimum=0.30,
+                        maximum=0.60,
+                        value=0.45,
+                        step=0.01,
+                        label=LOCALES["head_height_ratio"][DEFAULT_LANG]["label"],
                         interactive=True,
                     )
                     top_distance_option = gr.Slider(
@@ -912,6 +926,20 @@ def create_ui(
                         choices=LOCALES["print_switch"][language]["choices"],
                         value=LOCALES["print_switch"][language]["choices"][0],
                     ),
+                    photo_standard_option: gr.update(
+                        label=LOCALES["photo_standard"][language]["label"],
+                        choices=LOCALES["photo_standard"][language]["choices"],
+                        value=LOCALES["photo_standard"][language]["choices"][0],
+                    ),
+                    head_measure_ratio_option: gr.update(
+                        label=LOCALES["head_measure_ratio"][language]["label"]
+                    ),
+                    head_height_ratio_option: gr.update(
+                        label=LOCALES["head_height_ratio"][language]["label"]
+                    ),
+                    top_distance_option: gr.update(
+                        label=LOCALES["top_distance"][language]["label"]
+                    ),
                 }
 
             def change_visibility(option, lang, locales_key, custom_component):
@@ -967,6 +995,31 @@ def create_ui(
                 return change_visibility(
                     image_kb_option, lang, "image_kb", custom_image_kb_size
                 )
+
+            # Cuando el usuario cambia el estándar, ajusta los 3 sliders
+            # a los valores preconfigurados. Si elige "Personalizado" no cambia nada.
+            def change_photo_standard(standard_option):
+                # Profiles (head_ratio, head_height_ratio, top_distance_max)
+                profiles = {
+                    "ICAO / Pasaporte": (0.50, 0.45, 0.12),
+                    "Visa Americana":  (0.45, 0.50, 0.10),
+                    "Escolar / Niños":  (0.20, 0.45, 0.12),
+                    "Personalizado":    None,  # don't change
+                }
+                vals = profiles.get(standard_option)
+                if vals is None:
+                    # Personalizado: leave slider values as they are
+                    return {
+                        head_measure_ratio_option: gr.update(),
+                        head_height_ratio_option:  gr.update(),
+                        top_distance_option:       gr.update(),
+                    }
+                hr, hh, td = vals
+                return {
+                    head_measure_ratio_option: gr.update(value=hr),
+                    head_height_ratio_option:  gr.update(value=hh),
+                    top_distance_option:       gr.update(value=td),
+                }
 
             def change_image_dpi(image_dpi_option, lang):
                 return change_visibility(
@@ -1061,6 +1114,17 @@ def create_ui(
                 outputs=[custom_image_dpi_size],
             )
 
+            # 照片标准 — al cambiar, ajusta los 3 sliders
+            photo_standard_option.input(
+                change_photo_standard,
+                inputs=[photo_standard_option],
+                outputs=[
+                    head_measure_ratio_option,
+                    head_height_ratio_option,
+                    top_distance_option,
+                ],
+            )
+
             img_but.click(
                 processor.process,
                 inputs=[
@@ -1090,6 +1154,7 @@ def create_ui(
                     watermark_text_space,
                     face_detect_model_options,
                     head_measure_ratio_option,
+                    head_height_ratio_option,
                     top_distance_option,
                     whitening_option,
                     image_dpi_options,
