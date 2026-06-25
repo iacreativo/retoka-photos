@@ -226,6 +226,13 @@ LOCALES = {
         "ko": {"label": "규정 가이드 표시"},
         "es": {"label": "Mostrar guía de cumplimiento"},
     },
+    "show_requirements": {
+        "en": {"label": "📖 Show size requirements"},
+        "zh": {"label": "📖 显示尺寸要求"},
+        "ja": {"label": "📖 サイズ要件を表示"},
+        "ko": {"label": "📖 크기 요건 표시"},
+        "es": {"label": "📖 Mostrar requisitos del tamaño"},
+    },
     "image_kb": {
         "en": {"label": "Set KB size", "choices": ["Not Set", "Custom"]},
         "zh": {"label": "设置 KB 大小", "choices": ["不设置", "自定义"]},
@@ -462,6 +469,35 @@ LOCALES = {
         "ja": {"label": "飽和度強度"},
         "ko": {"label": "포화도 강도"},
         "es": {"label": "Saturación"},
+    },
+    # ---- Blanco y negro (ID-photo tuned) ----
+    "bw_enable": {
+        "en": {"label": "🖤 Convert to black & white"},
+        "zh": {"label": "🖤 转换为黑白"},
+        "ja": {"label": "🖤 白黒に変換"},
+        "ko": {"label": "🖤 흑백으로 변환"},
+        "es": {"label": "🖤 Convertir a blanco y negro"},
+    },
+    "bw_intensity": {
+        "en": {"label": "B&W intensity (0=color, 100=B&W)"},
+        "zh": {"label": "黑白强度 (0=彩色, 100=黑白)"},
+        "ja": {"label": "白黒強度 (0=カラー, 100=白黒)"},
+        "ko": {"label": "흑백 강도 (0=컬러, 100=흑백)"},
+        "es": {"label": "Intensidad (0=color, 100=B/N)"},
+    },
+    "bw_contrast": {
+        "en": {"label": "B&W contrast"},
+        "zh": {"label": "黑白对比度"},
+        "ja": {"label": "白黒コントラスト"},
+        "ko": {"label": "흑백 대비"},
+        "es": {"label": "Contraste B/N"},
+    },
+    "bw_gamma": {
+        "en": {"label": "B&W gamma (100=neutral)"},
+        "zh": {"label": "黑白伽马 (100=中性)"},
+        "ja": {"label": "白黒ガンマ (100=中立)"},
+        "ko": {"label": "흑백 감마 (100=중립)"},
+        "es": {"label": "Gamma B/N (100=neutro)"},
     },
     "plugin": {
         "en": {

@@ -462,12 +462,20 @@ def create_ui(
 
                     # ---- Panel informativo: requisitos del tamaño elegido ----
                     # Se actualiza con .change() sobre size_list_options y language_options.
+                    # El usuario puede ocultar/mostrar el panel con el checkbox
+                    # show_requirements_checkbox (default: visible).
+                    show_requirements_checkbox = gr.Checkbox(
+                        label=LOCALES["show_requirements"][DEFAULT_LANG]["label"],
+                        value=True,
+                        elem_id="show_requirements_checkbox",
+                    )
                     size_requirements_panel = gr.Markdown(
                         value=render_reqs(
                             LOCALES["size_list"][DEFAULT_LANG]["choices"][0],
                             DEFAULT_LANG,
                         ),
                         elem_id="size_requirements_panel",
+                        visible=True,
                     )
                     # 自定义尺寸px
                     with gr.Row(visible=False) as custom_size_px:
@@ -649,6 +657,39 @@ def create_ui(
                         step=1,
                         interactive=True,
                     )
+
+                    # ---- Blanco y negro para foto de identificación ----
+                    gr.Markdown("---")
+                    bw_enable = gr.Checkbox(
+                        label=LOCALES["bw_enable"][DEFAULT_LANG]["label"],
+                        value=False,
+                        elem_id="bw_enable",
+                    )
+                    with gr.Row():
+                        bw_intensity = gr.Slider(
+                            label=LOCALES["bw_intensity"][DEFAULT_LANG]["label"],
+                            minimum=0,
+                            maximum=100,
+                            value=100,
+                            step=1,
+                            interactive=True,
+                        )
+                        bw_contrast = gr.Slider(
+                            label=LOCALES["bw_contrast"][DEFAULT_LANG]["label"],
+                            minimum=-30,
+                            maximum=40,
+                            value=12,
+                            step=1,
+                            interactive=True,
+                        )
+                        bw_gamma = gr.Slider(
+                            label=LOCALES["bw_gamma"][DEFAULT_LANG]["label"],
+                            minimum=80,
+                            maximum=130,
+                            value=105,
+                            step=1,
+                            interactive=True,
+                        )
 
                 # TAB4 - 水印 ------------------------------------------------
                 with gr.Tab(
@@ -942,6 +983,18 @@ def create_ui(
                     saturation_option: gr.update(
                         label=LOCALES["saturation_strength"][language]["label"]
                     ),
+                    bw_enable: gr.update(
+                        label=LOCALES["bw_enable"][language]["label"]
+                    ),
+                    bw_intensity: gr.update(
+                        label=LOCALES["bw_intensity"][language]["label"]
+                    ),
+                    bw_contrast: gr.update(
+                        label=LOCALES["bw_contrast"][language]["label"]
+                    ),
+                    bw_gamma: gr.update(
+                        label=LOCALES["bw_gamma"][language]["label"]
+                    ),
                     custom_size_width_px: gr.update(
                         label=LOCALES["custom_size_px"][language]["width"]
                     ),
@@ -967,6 +1020,9 @@ def create_ui(
                     ),
                     show_overlay_option: gr.update(
                         label=LOCALES["show_overlay"][language]["label"],
+                    ),
+                    show_requirements_checkbox: gr.update(
+                        label=LOCALES["show_requirements"][language]["label"],
                     ),
                     print_parameter_tab: gr.update(
                         label=LOCALES["print_tab"][language]["label"]
@@ -1189,6 +1245,18 @@ def create_ui(
                 outputs=[size_requirements_panel],
             )
 
+            # Mostrar / ocultar el panel de requisitos con el checkbox.
+            # Actualiza la visibilidad y, si se vuelve a mostrar, refresca
+            # el contenido por si cambió el tamaño mientras estaba oculto.
+            def toggle_requirements_panel(show, lang, current_size):
+                return gr.update(visible=show, value=render_reqs(current_size, lang))
+
+            show_requirements_checkbox.input(
+                toggle_requirements_panel,
+                inputs=[show_requirements_checkbox, language_options, size_list_options],
+                outputs=[size_requirements_panel],
+            )
+
             # 颜色
             color_options.input(
                 change_color,
@@ -1262,6 +1330,10 @@ def create_ui(
                     plugin_options,
                     show_overlay_option,
                     print_options,
+                    bw_enable,
+                    bw_intensity,
+                    bw_contrast,
+                    bw_gamma,
                 ],
                 outputs=[
                     img_output_standard,

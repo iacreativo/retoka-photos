@@ -66,6 +66,10 @@ class IDPhotoProcessor:
         plugin_option=[],
         show_compliance_overlay=True,
         print_switch=None,
+        bw_enable=False,
+        bw_intensity=100,
+        bw_contrast=12,
+        bw_gamma=105,
     ):        
         # 初始化参数
         top_distance_min = top_distance_max - 0.02
@@ -177,6 +181,10 @@ class IDPhotoProcessor:
             head_measure_ratio,
             head_height_ratio,
             top_distance_max,
+            bw_enable,
+            bw_intensity,
+            bw_contrast,
+            bw_gamma,
         )
 
     # 初始化idphoto_json字典
@@ -370,6 +378,10 @@ class IDPhotoProcessor:
         head_measure_ratio,
         head_height_ratio,
         top_distance_max,
+        bw_enable=False,
+        bw_intensity=100,
+        bw_contrast=12,
+        bw_gamma=105,
     ):
         """处理生成的照片"""
         result_image_standard, result_image_hd, _, _, _, _ = result
@@ -380,6 +392,26 @@ class IDPhotoProcessor:
         result_image_standard, result_image_hd = self._render_background(
             result_image_standard, result_image_hd, idphoto_json, language
         )
+
+        # 黑白转换 (ID-photo tuned) — aplicado ANTES del overlay/marca de agua
+        # para que tanto la foto final como el guide se vean consistentes.
+        if bw_enable:
+            from demo.bw_converter import convert_to_bw as _bw
+            gamma_val = max(bw_gamma, 1) / 100.0  # slider entrega 80–130
+            result_image_standard = _bw(
+                result_image_standard,
+                intensity=bw_intensity,
+                contrast=bw_contrast,
+                gamma=gamma_val,
+                preserve_alpha=True,
+            )
+            result_image_hd = _bw(
+                result_image_hd,
+                intensity=bw_intensity,
+                contrast=bw_contrast,
+                gamma=gamma_val,
+                preserve_alpha=True,
+            )
 
         # 添加水印
         if watermark_option == LOCALES["watermark_switch"][language]["choices"][1]:
