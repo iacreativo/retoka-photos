@@ -75,16 +75,29 @@ def judge_layout(
         return layout_mode, centerBlockWidth_1, centerBlockHeight_1
 
 
-def generate_layout_array(input_height, input_width, LAYOUT_WIDTH=1795, LAYOUT_HEIGHT=1205):
+def generate_layout_array(input_height, input_width, LAYOUT_WIDTH=1795, LAYOUT_HEIGHT=1205, mode="full"):
+    # mode options:
+    #   "full"        - fills the entire sheet (default, current behavior)
+    #   "half-left"   - photos only on the left half (width-wise), right half is blank
+    #   "half-right"  - photos only on the right half, left half is blank
     # 1.基础参数表
     PHOTO_INTERVAL_H = 30  # 证件照与证件照之间的垂直距离
     PHOTO_INTERVAL_W = 30  # 证件照与证件照之间的水平距离
     SIDES_INTERVAL_H = 50  # 证件照与画布边缘的垂直距离
     SIDES_INTERVAL_W = 70  # 证件照与画布边缘的水平距离
-    LIMIT_BLOCK_W = LAYOUT_WIDTH - 2 * SIDES_INTERVAL_W
+
+    # For left/right half modes, constrain the available area to half the sheet WIDTH
+    # (height stays the same, because for 25x30mm photos on 4x6 sheet you need the
+    # full height to fit 3 rows when width is halved)
+    if mode in ("half-left", "half-right"):
+        judge_layout_width = LAYOUT_WIDTH // 2
+    else:
+        judge_layout_width = LAYOUT_WIDTH
+
+    LIMIT_BLOCK_W = judge_layout_width - 2 * SIDES_INTERVAL_W
     LIMIT_BLOCK_H = LAYOUT_HEIGHT - 2 * SIDES_INTERVAL_H
 
-    # 2.创建一个 1180x1746 的空白画布
+    # 2.创建一个空白画布 (canvas is always the full sheet)
     white_background = np.zeros([LAYOUT_HEIGHT, LAYOUT_WIDTH, 3], np.uint8)
     white_background.fill(255)
 
@@ -98,7 +111,13 @@ def generate_layout_array(input_height, input_width, LAYOUT_WIDTH=1795, LAYOUT_H
         LIMIT_BLOCK_H,
     )
     # 4.开始排列组合
-    x11 = (LAYOUT_WIDTH - centerBlockWidth) // 2
+    if mode == "half-left":
+        x11 = SIDES_INTERVAL_W  # left margin
+    elif mode == "half-right":
+        # right half starts after left half
+        x11 = (LAYOUT_WIDTH // 2) + SIDES_INTERVAL_W
+    else:
+        x11 = (LAYOUT_WIDTH - centerBlockWidth) // 2
     y11 = (LAYOUT_HEIGHT - centerBlockHeight) // 2
     typography_arr = []
     typography_rotate = False

@@ -460,12 +460,15 @@ class IDPhotoProcessor:
         }
         
         choose_layout_size = PRESET_LAYOUT_SIZE[idphoto_json["print_switch"]]
-        
+        # Optional 3rd element = layout mode ("full" | "half-top" | "half-bottom")
+        layout_mode = choose_layout_size[2] if len(choose_layout_size) > 2 else "full"
+
         typography_arr, typography_rotate = generate_layout_array(
             input_height=idphoto_json["size"][0],
             input_width=idphoto_json["size"][1],
             LAYOUT_HEIGHT= choose_layout_size[0],
             LAYOUT_WIDTH= choose_layout_size[1],
+            mode=layout_mode,
         )
         
         result_image_layout = generate_layout_image(
