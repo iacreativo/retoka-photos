@@ -3,6 +3,7 @@ import os
 import pathlib
 from demo.locales import LOCALES
 from demo.processor import IDPhotoProcessor
+from demo.photo_requirements import render_requirements as render_reqs
 
 """
 只裁切模式:
@@ -108,6 +109,36 @@ def create_ui(
         box-shadow: 0 6px 20px rgba(96, 165, 250, 0.5) !important;
         transform: translateY(-1px) !important;
         color: #ffffff !important;
+    }
+
+    /* === Info panel: requisitos del tamaño elegido === */
+    #size_requirements_panel {
+        background: linear-gradient(180deg, #1f2126 0%, #262a31 100%) !important;
+        border: 1px solid #3a3f4a !important;
+        border-left: 4px solid #22d3ee !important;
+        border-radius: 10px !important;
+        padding: 16px 20px !important;
+        margin-top: 12px !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25) !important;
+    }
+    #size_requirements_panel h3,
+    #size_requirements_panel h3 *,
+    #size_requirements_panel strong,
+    #size_requirements_panel p,
+    #size_requirements_panel em,
+    #size_requirements_panel li {
+        color: #e2e8f0 !important;
+    }
+    #size_requirements_panel h3 {
+        color: #22d3ee !important;
+        font-size: 18px !important;
+        margin-top: 0 !important;
+        margin-bottom: 8px !important;
+        font-weight: 700 !important;
+    }
+    #size_requirements_panel strong {
+        color: #60a5fa !important;
+        font-weight: 600 !important;
     }
 
     /* === Tabs — soft blue bottom border for selected === */
@@ -428,6 +459,16 @@ def create_ui(
                             value=LOCALES["size_list"][DEFAULT_LANG]["choices"][0],
                             elem_id="size_list",
                         )
+
+                    # ---- Panel informativo: requisitos del tamaño elegido ----
+                    # Se actualiza con .change() sobre size_list_options y language_options.
+                    size_requirements_panel = gr.Markdown(
+                        value=render_reqs(
+                            LOCALES["size_list"][DEFAULT_LANG]["choices"][0],
+                            DEFAULT_LANG,
+                        ),
+                        elem_id="size_requirements_panel",
+                    )
                     # 自定义尺寸px
                     with gr.Row(visible=False) as custom_size_px:
                         custom_size_height_px = gr.Number(
@@ -1116,12 +1157,14 @@ def create_ui(
                         head_measure_ratio_option: gr.update(),
                         head_height_ratio_option:  gr.update(),
                         top_distance_option:       gr.update(),
+                        size_requirements_panel:   gr.update(value=render_reqs(size_option_item, lang)),
                     }
                 _, _, head_ratio, head_height, top_dist = size_data[:5]
                 return {
                     head_measure_ratio_option: gr.update(value=head_ratio),
                     head_height_ratio_option:  gr.update(value=head_height),
                     top_distance_option:       gr.update(value=top_dist),
+                    size_requirements_panel:   gr.update(value=render_reqs(size_option_item, lang)),
                 }
 
             size_list_options.input(
@@ -1131,7 +1174,19 @@ def create_ui(
                     head_measure_ratio_option,
                     head_height_ratio_option,
                     top_distance_option,
+                    size_requirements_panel,
                 ],
+            )
+
+            # Cuando el usuario cambia de IDIOMA, refresca también el panel
+            # de requisitos para que aparezca traducido.
+            def change_lang_for_requirements(lang, current_size):
+                return render_reqs(current_size, lang)
+
+            language_options.input(
+                change_lang_for_requirements,
+                inputs=[language_options, size_list_options],
+                outputs=[size_requirements_panel],
             )
 
             # 颜色
