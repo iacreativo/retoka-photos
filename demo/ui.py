@@ -498,8 +498,8 @@ def create_ui(
                     )
                     head_measure_ratio_option = gr.Slider(
                         minimum=0.1,
-                        maximum=0.7,
-                        value=0.50,
+                        maximum=0.5,
+                        value=0.20,
                         step=0.01,
                         label=LOCALES["head_measure_ratio"][DEFAULT_LANG]["label"],
                         interactive=True,
@@ -1000,9 +1000,12 @@ def create_ui(
             # a los valores preconfigurados. Si elige "Personalizado" no cambia nada.
             def change_photo_standard(standard_option):
                 # Profiles (head_ratio, head_height_ratio, top_distance_max)
+                # head_measure_ratio controla el area de la CARA detectada (no cabeza+cabello).
+                # Para que la CABEZA COMPLETA quede al 70-80% del alto (cumple ICAO),
+                # el valor debe estar entre 0.35-0.40 (la cara sera ~55-60% del alto).
                 profiles = {
-                    "ICAO / Pasaporte": (0.50, 0.45, 0.12),
-                    "Visa Americana":  (0.45, 0.50, 0.10),
+                    "ICAO / Pasaporte": (0.40, 0.45, 0.15),
+                    "Visa Americana":  (0.35, 0.50, 0.12),
                     "Escolar / Niños":  (0.20, 0.45, 0.12),
                     "Personalizado":    None,  # don't change
                 }

@@ -52,7 +52,7 @@ class IDPhotoProcessor:
         watermark_text_angle,
         watermark_text_space,
         face_detect_option,
-        head_measure_ratio=0.50,
+        head_measure_ratio=0.20,
         head_height_ratio=0.45,
         top_distance_max=0.12,
         whitening_strength=0,
