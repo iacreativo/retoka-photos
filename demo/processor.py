@@ -398,13 +398,24 @@ class IDPhotoProcessor:
         # Helps the photographer verify against ICAO / US Visa / etc.
         show_overlay = idphoto_json.get("show_compliance_overlay", True)
         if show_overlay:
-            result_image_standard = draw_compliance_overlay(
-                result_image_standard,
-                head_measure_ratio=head_measure_ratio,
-                head_height_ratio=head_height_ratio,
-                top_distance=top_distance_max,
-                show_overlay=True,
-            )
+            # result_image_standard is a numpy array here, convert to PIL for drawing
+            try:
+                from PIL import Image as _PILImage
+                if isinstance(result_image_standard, np.ndarray):
+                    pil_for_overlay = _PILImage.fromarray(result_image_standard)
+                else:
+                    pil_for_overlay = result_image_standard
+                pil_with_overlay = draw_compliance_overlay(
+                    pil_for_overlay,
+                    head_measure_ratio=head_measure_ratio,
+                    head_height_ratio=head_height_ratio,
+                    top_distance=top_distance_max,
+                    show_overlay=True,
+                )
+                # Back to numpy for downstream rendering
+                result_image_standard = np.array(pil_with_overlay)
+            except Exception as e:
+                print(f"[Retoka] Compliance overlay failed: {e}")
 
         # 生成排版照片
         result_image_layout, result_image_layout_visible = self._generate_image_layout(
