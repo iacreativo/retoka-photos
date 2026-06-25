@@ -469,11 +469,11 @@ LOCALES = {
         "es": {"label": "Imprimir (4x6)"},
     },
     "print_switch": {
-        "shape": [[1205, 1795], [1051, 1500], [2479, 3508], [1051, 1500], [1205, 1795]],
-        "en": {"label": "Paper size", "choices": ["6 inch", "5 inch", "A4", "3R", "4R"]},
-        "zh": {"label": "相纸选择", "choices": ["六寸", "五寸", "A4", "3R", "4R"]},
-        "ja": {"label": "用紙サイズ", "choices": ["6インチ", "5インチ", "A4", "3R", "4R"]},
-        "ko": {"label": "용지 사이즈", "choices": ["6인치", "5인치", "A4", "3R", "4R"]},
-        "es": {"label": "Tamaño del papel", "choices": ["6 pulgadas (4x6)", "5 pulgadas", "A4", "3R", "4R"]},
+        "shape": [[1205, 1795], [1051, 1500], [2479, 3508], [1051, 1500], [1205, 1795], [900, 1200]],
+        "en": {"label": "Paper size", "choices": ["6 inch", "5 inch", "A4", "3R", "4R", "4x3 inch"]},
+        "zh": {"label": "相纸选择", "choices": ["六寸", "五寸", "A4", "3R", "4R", "4x3 寸"]},
+        "ja": {"label": "用紙サイズ", "choices": ["6インチ", "5インチ", "A4", "3R", "4R", "4x3 インチ"]},
+        "ko": {"label": "용지 사이즈", "choices": ["6인치", "5인치", "A4", "3R", "4R", "4x3 인치"]},
+        "es": {"label": "Tamaño del papel", "choices": ["6 pulgadas (4x6)", "5 pulgadas", "A4", "3R", "4R", "4x3 pulgadas"]},
     },
 }
