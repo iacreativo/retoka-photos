@@ -686,6 +686,10 @@ def render_requirements(size_name: str, lang: str = "es") -> str:
     """
     Render the requirements panel as Markdown for the given size + language.
     Returns a default placeholder if size_name is unknown or has no entry.
+
+    ``size_name`` may include the ``\\t\\t(H, W)`` suffix that
+    ``csv_to_size_list`` appends; we strip that before looking up the entry
+    in ``REQUIREMENTS`` (whose keys are the plain display names).
     """
     headers = HEADERS.get(lang, HEADERS["es"])
     labels = headers["section_labels"]
@@ -694,9 +698,16 @@ def render_requirements(size_name: str, lang: str = "es") -> str:
     if not size_name:
         return f"### {headers['title']}\n\n*{fallback}*"
 
-    entry = REQUIREMENTS.get(size_name, {}).get(lang) or REQUIREMENTS.get(size_name, {}).get("es")
+    # Strip the tab + "(H, W)" suffix that csv_to_size_list adds to the key.
+    # e.g. "Infantil 2.5x3 cm\t\t(354, 295)" -> "Infantil 2.5x3 cm"
+    clean_name = size_name.split("\t", 1)[0].strip()
+
+    entry = (
+        REQUIREMENTS.get(clean_name, {}).get(lang)
+        or REQUIREMENTS.get(clean_name, {}).get("es")
+    )
     if not entry:
-        return f"### {headers['title']}\n\n*{fallback}*"
+        return f"### {headers['title']}\n\n*{fallback}* ({clean_name})"
 
     lines = [f"### {headers['title']}", "", f"**{entry['name']}**", ""]
     lines.append(f"*{headers['intro']}*")
