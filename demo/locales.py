@@ -219,6 +219,13 @@ LOCALES = {
             "choices": ["ICAO / Pasaporte", "Visa Americana", "Escolar / Niños", "Personalizado"],
         },
     },
+    "show_overlay": {
+        "en": {"label": "Show compliance guide"},
+        "zh": {"label": "显示合规指引"},
+        "ja": {"label": "コンプライアンスガイドを表示"},
+        "ko": {"label": "규정 가이드 표시"},
+        "es": {"label": "Mostrar guía de cumplimiento"},
+    },
     "image_kb": {
         "en": {"label": "Set KB size", "choices": ["Not Set", "Custom"]},
         "zh": {"label": "设置 KB 大小", "choices": ["不设置", "自定义"]},

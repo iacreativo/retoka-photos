@@ -485,6 +485,12 @@ def create_ui(
                             interactive=True,
                             value=LOCALES["plugin"][DEFAULT_LANG]["value"]
                         )
+                        # Mostrar guia de cumplimiento (overlay visual)
+                        show_overlay_option = gr.Checkbox(
+                            label=LOCALES["show_overlay"][DEFAULT_LANG]["label"],
+                            value=True,
+                            interactive=True,
+                        )
 
                 # TAB2 - 高级参数 ------------------------------------------------
                 with gr.Tab(
@@ -918,6 +924,9 @@ def create_ui(
                         choices=LOCALES["plugin"][language]["choices"],
                         value=LOCALES["plugin"][language]["choices"][0],
                     ),
+                    show_overlay_option: gr.update(
+                        label=LOCALES["show_overlay"][language]["label"],
+                    ),
                     print_parameter_tab: gr.update(
                         label=LOCALES["print_tab"][language]["label"]
                     ),
@@ -1096,6 +1105,35 @@ def create_ui(
                 ],
             )
 
+            # Cuando el usuario cambia el TAMAÑO de foto, actualiza los 3 sliders
+            # de recorte con los valores por defecto del CSV (head_ratio,
+            # head_height, top_dist). Así cada tamaño se recorta correctamente
+            # según el estándar oficial.
+            def change_size(size_option_item, lang):
+                size_data = LOCALES["size_list"][lang]["develop"].get(size_option_item)
+                if not size_data or len(size_data) < 5:
+                    return {
+                        head_measure_ratio_option: gr.update(),
+                        head_height_ratio_option:  gr.update(),
+                        top_distance_option:       gr.update(),
+                    }
+                _, _, head_ratio, head_height, top_dist = size_data[:5]
+                return {
+                    head_measure_ratio_option: gr.update(value=head_ratio),
+                    head_height_ratio_option:  gr.update(value=head_height),
+                    top_distance_option:       gr.update(value=top_dist),
+                }
+
+            size_list_options.input(
+                change_size,
+                inputs=[size_list_options, language_options],
+                outputs=[
+                    head_measure_ratio_option,
+                    head_height_ratio_option,
+                    top_distance_option,
+                ],
+            )
+
             # 颜色
             color_options.input(
                 change_color,
@@ -1167,6 +1205,7 @@ def create_ui(
                     sharpen_option,
                     saturation_option,
                     plugin_options,
+                    show_overlay_option,
                     print_options,
                 ],
                 outputs=[

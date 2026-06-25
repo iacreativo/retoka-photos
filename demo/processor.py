@@ -15,6 +15,7 @@ from hivision.creator.layout_calculator import (
 from hivision.creator.choose_handler import choose_handler
 from hivision.plugin.template.template_calculator import generte_template_photo
 from demo.utils import range_check
+from demo.compliance_overlay import draw_compliance_overlay
 import gradio as gr
 import os
 import cv2
@@ -63,6 +64,7 @@ class IDPhotoProcessor:
         sharpen_strength=0,
         saturation_strength=0,
         plugin_option=[],
+        show_compliance_overlay=True,
         print_switch=None,
     ):        
         # 初始化参数
@@ -96,6 +98,8 @@ class IDPhotoProcessor:
         idphoto_json = self._initialize_idphoto_json(
             mode_option, color_option, render_option_index, image_kb_options, layout_photo_crop_line_option, jpeg_format_option, print_switch
         )
+        # Stash the overlay toggle so it survives into _process_generated_photo
+        idphoto_json["show_compliance_overlay"] = show_compliance_overlay
 
         # 处理尺寸模式
         size_result = self._process_size_mode(
@@ -170,6 +174,9 @@ class IDPhotoProcessor:
             watermark_text_angle,
             watermark_text_space,
             watermark_text_color,
+            head_measure_ratio,
+            head_height_ratio,
+            top_distance_max,
         )
 
     # 初始化idphoto_json字典
@@ -210,9 +217,21 @@ class IDPhotoProcessor:
         """处理尺寸模式"""
         # 如果选择了尺寸列表
         if idphoto_json["size_mode"] == LOCALES["size_mode"][language]["choices"][0]:
-            idphoto_json["size"] = LOCALES["size_list"][language]["develop"][
-                size_list_option
-            ]
+            size_data = LOCALES["size_list"][language]["develop"][size_list_option]
+            # New CSV format: (h, w, head_ratio, head_height, top_dist)
+            # Old format: (h, w)
+            if len(size_data) >= 5:
+                h, w, head_ratio, head_height, top_dist = size_data[:5]
+                idphoto_json["size"] = (h, w)
+                # Store crop profile so the overlay + creator can use them
+                idphoto_json["head_measure_ratio_default"] = head_ratio
+                idphoto_json["head_height_ratio_default"] = head_height
+                idphoto_json["top_distance_default"] = top_dist
+            else:
+                idphoto_json["size"] = size_data
+                idphoto_json["head_measure_ratio_default"] = 0.20
+                idphoto_json["head_height_ratio_default"] = 0.45
+                idphoto_json["top_distance_default"] = 0.12
         # 如果选择了自定义尺寸(px或mm)
         elif (
             idphoto_json["size_mode"] == LOCALES["size_mode"][language]["choices"][2]
@@ -348,6 +367,9 @@ class IDPhotoProcessor:
         watermark_text_angle,
         watermark_text_space,
         watermark_text_color,
+        head_measure_ratio,
+        head_height_ratio,
+        top_distance_max,
     ):
         """处理生成的照片"""
         result_image_standard, result_image_hd, _, _, _, _ = result
@@ -371,7 +393,19 @@ class IDPhotoProcessor:
                 watermark_text_space,
                 watermark_text_color,
             )
-        
+
+        # Visual compliance overlay (optional)
+        # Helps the photographer verify against ICAO / US Visa / etc.
+        show_overlay = idphoto_json.get("show_compliance_overlay", True)
+        if show_overlay:
+            result_image_standard = draw_compliance_overlay(
+                result_image_standard,
+                head_measure_ratio=head_measure_ratio,
+                head_height_ratio=head_height_ratio,
+                top_distance=top_distance_max,
+                show_overlay=True,
+            )
+
         # 生成排版照片
         result_image_layout, result_image_layout_visible = self._generate_image_layout(
             idphoto_json,
