@@ -859,6 +859,58 @@ def create_ui(
             cursor: pointer !important;
         }
 
+        /* === Gradio 6 CheckboxGroup items (widget-choice-row) === */
+        /* The 5 items in "Opciones extra" use class="widget-choice-row" */
+        .widget-choices, [class*="widget-choices"] {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            background-color: transparent !important;
+        }
+        .widget-choice-row,
+        label[class*="widget-choice-row"],
+        div[class*="widget-choice-row"] {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            min-height: 48px !important;
+            padding: 12px 14px !important;
+            margin: 0 !important;
+            background-color: #26282e !important;
+            border: 1px solid #4a4d54 !important;
+            border-radius: 8px !important;
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            cursor: pointer !important;
+        }
+        .widget-choice-row:hover,
+        label[class*="widget-choice-row"]:hover {
+            background-color: #3f4451 !important;
+            border-color: #60a5fa !important;
+        }
+        /* Checked: blue background */
+        .widget-choice-row:has(input:checked),
+        label[class*="widget-choice-row"]:has(input:checked) {
+            background-color: #1e3a5f !important;
+            border-color: #60a5fa !important;
+        }
+        /* Text inside widget-checkbox-label */
+        .widget-checkbox-label,
+        span[class*="widget-checkbox-label"] {
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            font-size: 16px !important;
+            flex: 1 1 auto !important;
+        }
+        .widget-checkbox-label {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+        }
+        }
+
         /* Gradio 6 single Checkbox ("s--slider" container with role="switch") */
         .s.s--slider, .wrap[class*="-checkbox"] {
             background-color: #26282e !important;
