@@ -359,6 +359,11 @@ def create_ui(
        === MOBILE RESPONSIVE (max-width: 768px) — same look as desktop
        ============================================================ */
     @media (max-width: 768px) {
+        /* Tell the OS to use DARK UI for native form elements (iOS / Android).
+           Without this, Safari and Chrome show white popup pickers even when
+           the page is dark — and the text inside becomes white-on-white. */
+        :root, html { color-scheme: dark !important; }
+
         /* Base font up so text is readable on phones */
         html, body, .gradio-container, .gr-panel, .gr-block,
         .gr-input, .gr-text-input, .gr-number-input, .gr-button,
@@ -372,24 +377,65 @@ def create_ui(
         h3 { font-size: 19px !important; }
         h4 { font-size: 17px !important; }
 
-        /* Inputs and dropdowns — large tap targets (>= 44px) */
+        /* Inputs and dropdowns — large tap targets (>= 44px).
+           Force dark bg + light fg with !important because iOS Safari
+           and Android Chrome override these by default on mobile. */
         input, textarea, select,
         .gr-input, .gr-text-input, .gr-number-input,
         .gr-dropdown, .gr-dropdown input,
-        input[type="text"], input[type="number"], input[type="search"] {
+        .gr-dropdown-value,
+        input[type="text"], input[type="number"], input[type="search"],
+        input[type="email"], input[type="password"], input[type="tel"],
+        input[type="url"], input[type="checkbox"], input[type="radio"] {
             min-height: 44px !important;
             padding: 10px 14px !important;
             font-size: 16px !important;
+            background-color: #26282e !important;
+            background-image: none !important;
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            border: 1.5px solid #4a4d54 !important;
+            border-radius: 8px !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            caret-color: #60a5fa !important;
+        }
+        /* iOS Safari placeholder color */
+        input::placeholder, textarea::placeholder,
+        .gr-input input::placeholder {
+            color: #8a93a6 !important;
+            -webkit-text-fill-color: #8a93a6 !important;
+            opacity: 1 !important;
         }
 
         /* Sliders — full width, big thumb */
         input[type="range"] {
             height: 32px !important;
             width: 100% !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            background: #1f2126 !important;
         }
         input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none !important;
             height: 26px !important;
             width: 26px !important;
+            background: #60a5fa !important;
+            border-radius: 50% !important;
+            border: 2px solid #1f2126 !important;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: #3f4451 !important;
+            height: 6px !important;
+            border-radius: 3px !important;
+        }
+        input[type="range"]::-moz-range-thumb {
+            height: 26px !important;
+            width: 26px !important;
+            background: #60a5fa !important;
+            border-radius: 50% !important;
+            border: 2px solid #1f2126 !important;
         }
 
         /* Buttons — big enough for thumbs */
@@ -397,6 +443,8 @@ def create_ui(
             min-height: 48px !important;
             font-size: 16px !important;
             padding: 12px 16px !important;
+            -webkit-appearance: none !important;
+            appearance: none !important;
         }
 
         /* Radio / Checkbox — bigger touch targets */
@@ -406,19 +454,56 @@ def create_ui(
             min-height: 44px !important;
             padding: 10px 12px !important;
             font-size: 16px !important;
+            background-color: #26282e !important;
+            color: #f1f5f9 !important;
         }
         label.checkbox-container .label-text,
         label.radio-container .label-text {
             font-size: 16px !important;
+            color: #f1f5f9 !important;
+        }
+        /* Radio/checkbox label backgrounds when selected */
+        label.checkbox-container.selected,
+        label.radio-container.selected {
+            background-color: #1e3a5f !important;
+            color: #f1f5f9 !important;
         }
 
-        /* Dropdown option list (when opened) */
+        /* Dropdown closed value (shows currently selected text) */
+        .gr-dropdown .gr-dropdown-value,
+        .gr-dropdown .gr-dropdown-value > *,
+        .gr-dropdown input,
+        [role="combobox"] {
+            color: #f1f5f9 !important;
+            background-color: #26282e !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            font-size: 16px !important;
+        }
+
+        /* Dropdown option list (when opened on mobile this is the popup) */
+        .gr-dropdown-options, .gr-dropdown-items,
+        .gr-dropdown-options-list, ul.options, [role="listbox"] {
+            background-color: #2f3239 !important;
+            border: 1px solid #4a4d54 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+            color: #f1f5f9 !important;
+        }
         .gr-dropdown-options .gr-dropdown-option,
         .gr-dropdown-items .gr-dropdown-item,
         [role="option"] {
             min-height: 44px !important;
             padding: 12px 14px !important;
             font-size: 16px !important;
+            background-color: #2f3239 !important;
+            color: #f1f5f9 !important;
+        }
+        .gr-dropdown-option:hover, .gr-dropdown-item:hover,
+        [role="option"]:hover,
+        .gr-dropdown-option.selected, .gr-dropdown-item.selected,
+        [role="option"][aria-selected="true"] {
+            background-color: #3b82f6 !important;
+            color: #ffffff !important;
         }
 
         /* Stack Gradio rows/columns vertically on mobile */
@@ -446,6 +531,7 @@ def create_ui(
             flex-wrap: nowrap !important;
             -webkit-overflow-scrolling: touch !important;
             scrollbar-width: thin !important;
+            background-color: transparent !important;
         }
         .tab-nav button, [role="tab"] {
             flex: 0 0 auto !important;
@@ -453,6 +539,11 @@ def create_ui(
             padding: 12px 14px !important;
             font-size: 14px !important;
             min-height: 44px !important;
+            color: #cbd5e1 !important;
+        }
+        .tab-nav button.selected, [role="tab"][aria-selected="true"] {
+            color: #f1f5f9 !important;
+            background-color: #2f3239 !important;
         }
 
         /* Images — fill width but don't overflow */
@@ -466,23 +557,35 @@ def create_ui(
             padding: 8px !important;
             margin: 0 !important;
             min-width: 0 !important;
+            background-color: transparent !important;
         }
         .gr-panel, .gr-box, .form, .container, .block {
             padding: 12px !important;
             margin: 6px 0 !important;
             border-radius: 10px !important;
+            background-color: #2f3239 !important;
+            color: #f1f5f9 !important;
         }
 
         /* Markdown body — bigger text */
         .prose p, .prose li, .prose strong, .prose em {
             font-size: 15px !important;
+            color: #e2e8f0 !important;
         }
-        .prose h3 { font-size: 18px !important; }
+        .prose h3 { font-size: 18px !important; color: #f1f5f9 !important; }
 
         /* Info panel — readable on phone */
         #size_requirements_panel {
             padding: 12px 14px !important;
             font-size: 15px !important;
+            color: #e2e8f0 !important;
+        }
+
+        /* Labels — visible on mobile */
+        label, .gr-block label, .gr-panel label,
+        .form label, .gr-input-label, .label-text {
+            color: #cbd5e1 !important;
+            font-size: 14px !important;
         }
 
         /* Logo/title block — wrap on small screens */
@@ -491,10 +594,16 @@ def create_ui(
             line-height: 1.2 !important;
             word-break: break-word !important;
         }
+
+        /* Hide the iOS tap highlight (gray box on click) */
+        * {
+            -webkit-tap-highlight-color: rgba(96, 165, 250, 0.2) !important;
+        }
     }
 
     /* Very small phones (<= 480px) — extra adjustments */
     @media (max-width: 480px) {
+        :root, html { color-scheme: dark !important; }
         h1 { font-size: 22px !important; }
         h2 { font-size: 19px !important; }
         h3 { font-size: 17px !important; }
