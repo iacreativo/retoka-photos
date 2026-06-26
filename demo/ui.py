@@ -356,6 +356,107 @@ def create_ui(
     }
 
     /* ============================================================
+       === GLOBAL DARK THEME OVERRIDE (works on all devices incl. mobile)
+       === Overrides Gradio's own CSS variables so all components
+       === inherit dark backgrounds + light text, no matter which
+       === Gradio classes the renderer uses.
+       ============================================================ */
+    :root, html, body, .gradio-container, body.dark, .dark {
+        color-scheme: dark !important;
+        /* Body / background */
+        --body-background-fill: #1f2126 !important;
+        --body-background-fill-dark: #1f2126 !important;
+        --body-text-color: #f1f5f9 !important;
+        --body-text-color-dark: #f1f5f9 !important;
+        --body-text-color-subdued: #94a3b8 !important;
+        --body-text-color-subdued-dark: #94a3b8 !important;
+        /* Block / panel backgrounds */
+        --block-background-fill: #2f3239 !important;
+        --block-background-fill-dark: #2f3239 !important;
+        --block-border-color: #3f4451 !important;
+        --block-border-color-dark: #3f4451 !important;
+        --block-label-text-color: #f1f5f9 !important;
+        --block-label-text-color-dark: #f1f5f9 !important;
+        --block-title-text-color: #f1f5f9 !important;
+        --block-title-text-color-dark: #f1f5f9 !important;
+        --panel-background-fill: #26282e !important;
+        --panel-background-fill-dark: #26282e !important;
+        --panel-border-color: #4a4d54 !important;
+        --panel-border-color-dark: #4a4d54 !important;
+        /* INPUTS — this is the critical one for "white on white" */
+        --input-background-fill: #26282e !important;
+        --input-background-fill-dark: #26282e !important;
+        --input-background-fill-hover: #2f3239 !important;
+        --input-background-fill-hover-dark: #2f3239 !important;
+        --input-background-fill-focus: #2f3239 !important;
+        --input-background-fill-focus-dark: #2f3239 !important;
+        --input-border-color: #4a4d54 !important;
+        --input-border-color-dark: #4a4d54 !important;
+        --input-border-color-hover: #60a5fa !important;
+        --input-border-color-hover-dark: #60a5fa !important;
+        --input-border-color-focus: #60a5fa !important;
+        --input-border-color-focus-dark: #60a5fa !important;
+        --input-text-color: #f1f5f9 !important;
+        --input-text-color-dark: #f1f5f9 !important;
+        --input-placeholder-color: #8a93a6 !important;
+        --input-placeholder-color-dark: #8a93a6 !important;
+        /* Tables / checkboxes */
+        --checkbox-background-color: #26282e !important;
+        --checkbox-background-color-dark: #26282e !important;
+        --checkbox-background-color-selected: #60a5fa !important;
+        --checkbox-background-color-selected-dark: #60a5fa !important;
+        --checkbox-border-color: #4a4d54 !important;
+        --checkbox-border-color-dark: #4a4d54 !important;
+        --checkbox-border-color-selected: #60a5fa !important;
+        --checkbox-border-color-selected-dark: #60a5fa !important;
+        --checkbox-label-text-color: #f1f5f9 !important;
+        --checkbox-label-text-color-dark: #f1f5f9 !important;
+        /* Radio */
+        --radio-circle: #60a5fa !important;
+        --radio-circle-dark: #60a5fa !important;
+        /* Table */
+        --table-text-color: #f1f5f9 !important;
+        --table-text-color-dark: #f1f5f9 !important;
+        --table-border-color: #4a4d54 !important;
+        --table-border-color-dark: #4a4d54 !important;
+        --table-even-background-fill: #26282e !important;
+        --table-even-background-fill-dark: #26282e !important;
+        --table-odd-background-fill: #2f3239 !important;
+        --table-odd-background-fill-dark: #2f3239 !important;
+    }
+
+    /* Force dark on form elements regardless of theme class */
+    html, body, .gradio-container, .gradio-container * {
+        -webkit-text-fill-color: inherit;
+    }
+    input, textarea, select, button {
+        background-color: #26282e !important;
+        color: #f1f5f9 !important;
+        -webkit-text-fill-color: #f1f5f9 !important;
+        border: 1.5px solid #4a4d54 !important;
+    }
+    input::placeholder, textarea::placeholder {
+        color: #8a93a6 !important;
+        -webkit-text-fill-color: #8a93a6 !important;
+        opacity: 1 !important;
+    }
+    /* Dropdown option lists (rendered to a portal/popup) */
+    [role="listbox"], [role="option"],
+    ul.options, ul.options li,
+    .dropdown-content, .select-content,
+    .options, .options li {
+        background-color: #2f3239 !important;
+        color: #f1f5f9 !important;
+        -webkit-text-fill-color: #f1f5f9 !important;
+    }
+    [role="option"]:hover, [role="option"][aria-selected="true"],
+    ul.options li:hover, .options li:hover {
+        background-color: #3b82f6 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    /* ============================================================
        === MOBILE RESPONSIVE (max-width: 768px) — same look as desktop
        ============================================================ */
     @media (max-width: 768px) {
