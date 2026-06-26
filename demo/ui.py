@@ -699,6 +699,29 @@ def create_ui(
             margin-right: 0 !important;
         }
 
+        /* Column containers — vertical stacking, full width */
+        .gr-column, .column, [class*="column"], .gr-form > .block,
+        .gradio-container .gr-column, .gradio-container [class*="-column"] {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            gap: 6px !important;
+        }
+        .gr-column > *, .column > *,
+        [class*="column"] > *, [class*="-column"] > * {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        /* Force any Gradio "wrap" / "block" inside a column/row to be
+           single column on mobile — no 2-col grids */
+        [class*="wrap"], [class*="-wrap"], .wrap {
+            grid-template-columns: 1fr !important;
+            flex-direction: column !important;
+        }
+
         /* Tabs — scroll horizontally if needed */
         .tab-nav, [role="tablist"] {
             overflow-x: auto !important;
@@ -1029,7 +1052,7 @@ def create_ui(
                         value=LOCALES["render_mode"][DEFAULT_LANG]["choices"][0],
                     )
                     
-                    with gr.Row():
+                    with gr.Column():
                         # 插件模式
                         plugin_options = gr.CheckboxGroup(
                             label=LOCALES["plugin"][DEFAULT_LANG]["label"],
