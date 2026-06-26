@@ -774,6 +774,80 @@ def create_ui(
         * {
             -webkit-tap-highlight-color: rgba(96, 165, 250, 0.2) !important;
         }
+
+        /* ============================================================
+           === Checkbox / CheckboxGroup (e.g. "Opciones extra")
+           ============================================================ */
+        /* The wrapping block + fieldset */
+        fieldset, [class*="checkbox-group"],
+        div[class*="checkbox-group"], div[class*="svelte-"][class*="-checkboxgroup"] {
+            background-color: #2f3239 !important;
+            border: 1px solid #4a4d54 !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+            margin: 6px 0 !important;
+        }
+
+        /* Each checkbox row — stack vertically with big touch targets */
+        .checkbox-label, label[class*="checkbox"],
+        [class*="checkbox-container"], [class*="checkbox-row"],
+        .s--checkbox-label, label[class*="-checkbox-label"] {
+            display: flex !important;
+            align-items: center !important;
+            gap: 12px !important;
+            min-height: 48px !important;
+            padding: 12px 14px !important;
+            margin: 4px 0 !important;
+            background-color: #26282e !important;
+            border: 1px solid #4a4d54 !important;
+            border-radius: 8px !important;
+            font-size: 16px !important;
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .checkbox-label:hover, label[class*="checkbox"]:hover {
+            background-color: #3f4451 !important;
+            border-color: #60a5fa !important;
+        }
+        /* Checked state */
+        .checkbox-label.checked, label[class*="checkbox"]:has(input:checked),
+        .checkbox-label:has(input:checked), label[class*="checkbox"][aria-checked="true"] {
+            background-color: #1e3a5f !important;
+            border-color: #60a5fa !important;
+            color: #ffffff !important;
+        }
+        /* Text inside label */
+        .checkbox-label span, label[class*="checkbox"] span {
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            font-size: 16px !important;
+            flex: 1 1 auto !important;
+        }
+
+        /* Native checkbox input (hidden but rendered) */
+        input[type="checkbox"] {
+            width: 22px !important;
+            height: 22px !important;
+            min-width: 22px !important;
+            min-height: 22px !important;
+            accent-color: #60a5fa !important;
+            cursor: pointer !important;
+        }
+
+        /* Gradio 6 single Checkbox ("s--slider" container with role="switch") */
+        .s.s--slider, .wrap[class*="-checkbox"] {
+            background-color: #26282e !important;
+            color: #f1f5f9 !important;
+            min-height: 48px !important;
+            padding: 10px 14px !important;
+            border: 1px solid #4a4d54 !important;
+            border-radius: 8px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 10px !important;
+        }
     }
 
     /* Very small phones (<= 480px) — extra adjustments */
