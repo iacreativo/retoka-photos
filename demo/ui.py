@@ -355,7 +355,152 @@ def create_ui(
         background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%) !important;
     }
 
-    /* === Inline JS to apply selected class as fallback === */
+    /* ============================================================
+       === MOBILE RESPONSIVE (max-width: 768px) — same look as desktop
+       ============================================================ */
+    @media (max-width: 768px) {
+        /* Base font up so text is readable on phones */
+        html, body, .gradio-container, .gr-panel, .gr-block,
+        .gr-input, .gr-text-input, .gr-number-input, .gr-button,
+        .gr-form, .gr-box, label, p, span, div, li, td, th {
+            font-size: 16px !important;
+            line-height: 1.5 !important;
+        }
+        /* Headers slightly bigger, easier to read */
+        h1 { font-size: 26px !important; }
+        h2 { font-size: 22px !important; }
+        h3 { font-size: 19px !important; }
+        h4 { font-size: 17px !important; }
+
+        /* Inputs and dropdowns — large tap targets (>= 44px) */
+        input, textarea, select,
+        .gr-input, .gr-text-input, .gr-number-input,
+        .gr-dropdown, .gr-dropdown input,
+        input[type="text"], input[type="number"], input[type="search"] {
+            min-height: 44px !important;
+            padding: 10px 14px !important;
+            font-size: 16px !important;
+        }
+
+        /* Sliders — full width, big thumb */
+        input[type="range"] {
+            height: 32px !important;
+            width: 100% !important;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            height: 26px !important;
+            width: 26px !important;
+        }
+
+        /* Buttons — big enough for thumbs */
+        .gr-button, button.primary, .lg, .secondary {
+            min-height: 48px !important;
+            font-size: 16px !important;
+            padding: 12px 16px !important;
+        }
+
+        /* Radio / Checkbox — bigger touch targets */
+        .gr-radio, .gr-checkbox, .gr-checkbox-group,
+        .gr-radio-item, .gr-checkbox-item,
+        label.checkbox-container, label.radio-container {
+            min-height: 44px !important;
+            padding: 10px 12px !important;
+            font-size: 16px !important;
+        }
+        label.checkbox-container .label-text,
+        label.radio-container .label-text {
+            font-size: 16px !important;
+        }
+
+        /* Dropdown option list (when opened) */
+        .gr-dropdown-options .gr-dropdown-option,
+        .gr-dropdown-items .gr-dropdown-item,
+        [role="option"] {
+            min-height: 44px !important;
+            padding: 12px 14px !important;
+            font-size: 16px !important;
+        }
+
+        /* Stack Gradio rows/columns vertically on mobile */
+        .gr-row, .gr-form, .gr-panel,
+        .gradio-container .gr-row,
+        .gradio-container .gr-form {
+            flex-direction: column !important;
+            display: flex !important;
+        }
+        /* Force single column inside any gr.Group / Row */
+        .gr-row > *,
+        .gr-form > *,
+        .gr-panel > * {
+            width: 100% !important;
+            max-width: 100% !important;
+            flex: 0 0 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        /* Tabs — scroll horizontally if needed */
+        .tab-nav, [role="tablist"] {
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            flex-wrap: nowrap !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: thin !important;
+        }
+        .tab-nav button, [role="tab"] {
+            flex: 0 0 auto !important;
+            white-space: nowrap !important;
+            padding: 12px 14px !important;
+            font-size: 14px !important;
+            min-height: 44px !important;
+        }
+
+        /* Images — fill width but don't overflow */
+        .gr-image, .image-container, img {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        /* Reduce overall padding so content uses the screen */
+        .gradio-container, .app, .main, .wrap {
+            padding: 8px !important;
+            margin: 0 !important;
+            min-width: 0 !important;
+        }
+        .gr-panel, .gr-box, .form, .container, .block {
+            padding: 12px !important;
+            margin: 6px 0 !important;
+            border-radius: 10px !important;
+        }
+
+        /* Markdown body — bigger text */
+        .prose p, .prose li, .prose strong, .prose em {
+            font-size: 15px !important;
+        }
+        .prose h3 { font-size: 18px !important; }
+
+        /* Info panel — readable on phone */
+        #size_requirements_panel {
+            padding: 12px 14px !important;
+            font-size: 15px !important;
+        }
+
+        /* Logo/title block — wrap on small screens */
+        .gradio-container h1 {
+            font-size: 22px !important;
+            line-height: 1.2 !important;
+            word-break: break-word !important;
+        }
+    }
+
+    /* Very small phones (<= 480px) — extra adjustments */
+    @media (max-width: 480px) {
+        h1 { font-size: 22px !important; }
+        h2 { font-size: 19px !important; }
+        h3 { font-size: 17px !important; }
+        .gr-button, button.primary { font-size: 15px !important; }
+        .gr-panel, .gr-box { padding: 10px !important; }
+    }
     """
     retoka_js = """
     <script>
