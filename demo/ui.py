@@ -456,6 +456,80 @@ def create_ui(
         -webkit-text-fill-color: #ffffff !important;
     }
 
+    /* === Gradio 6 actual rendered selectors (Svelte-scoped, so use
+       data-testid + attribute + role selectors, not class names) === */
+    /* Radio labels — the white boxes we saw in the screenshot */
+    label[data-testid$="-radio-label"],
+    label[data-testid*="radio-label"] {
+        background-color: #2f3239 !important;
+        color: #f1f5f9 !important;
+        border: 1px solid #4a4d54 !important;
+        border-radius: 8px !important;
+    }
+    label[data-testid$="-radio-label"] span,
+    label[data-testid*="radio-label"] span {
+        color: #f1f5f9 !important;
+        -webkit-text-fill-color: #f1f5f9 !important;
+    }
+    label[data-testid$="-radio-label"][selected],
+    label[data-testid*="-radio-label"][selected] {
+        background-color: #1e3a5f !important;
+        color: #ffffff !important;
+        border-color: #60a5fa !important;
+    }
+    label[data-testid$="-radio-label"][selected] span,
+    label[data-testid*="-radio-label"][selected] span {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    label[data-testid$="-radio-label"]:hover,
+    label[data-testid*="-radio-label"]:hover {
+        background-color: #3f4451 !important;
+        border-color: #60a5fa !important;
+    }
+
+    /* Checkbox (svelte-1io85vl wrapper, role=switch button) */
+    .s.s--slider,
+    div[class*="s--slider"] {
+        background-color: #26282e !important;
+        color: #f1f5f9 !important;
+        border-radius: 8px !important;
+    }
+    button[role="switch"] {
+        background-color: #4a4d54 !important;
+    }
+    button[role="switch"][aria-checked="true"] {
+        background-color: #60a5fa !important;
+    }
+
+    /* Dropdown trigger (combobox) */
+    [role="combobox"],
+    input[role="combobox"] {
+        background-color: #26282e !important;
+        color: #f1f5f9 !important;
+        -webkit-text-fill-color: #f1f5f9 !important;
+        border: 1px solid #4a4d54 !important;
+        border-radius: 8px !important;
+    }
+
+    /* Tab buttons (svelte-1xpzbgb stepper) */
+    [role="tab"] {
+        color: #cbd5e1 !important;
+        background-color: transparent !important;
+    }
+    [role="tab"][aria-selected="true"] {
+        color: #f1f5f9 !important;
+        background-color: #2f3239 !important;
+        border-bottom: 3px solid #60a5fa !important;
+    }
+
+    /* Generic block/panel containers (block backgrounds) */
+    .block, [class*="block-"], fieldset {
+        background-color: #2f3239 !important;
+        color: #f1f5f9 !important;
+        border-color: #4a4d54 !important;
+    }
+
     /* ============================================================
        === MOBILE RESPONSIVE (max-width: 768px) — same look as desktop
        ============================================================ */
