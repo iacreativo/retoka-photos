@@ -80,10 +80,12 @@ def draw_compliance_overlay(
     Returns:
         PIL Image with overlay drawn (or unchanged).
 
-    Note: we don't need the source face bbox because the crop algorithm
-    guarantees face_area / crop_area == head_measure_ratio. So face height
-    fraction in the final image = sqrt(head_measure_ratio), and adding ~18%
-    for hair gives the expected head height fraction.
+    Note: the crop algorithm guarantees ``face_area_final = head_measure_ratio *
+    H * W``. For a square face, ``face_h = sqrt(face_area) = sqrt(head_measure_ratio
+    * H * W)``, and ``face_h / H = sqrt(head_measure_ratio * W / H)``. We use that
+    aspect-aware formula (not the naive ``sqrt(head_measure_ratio)``) so the
+    expected head rectangle matches what the algorithm actually produces on
+    non-square photos. See ``docs/SIZE_SPECS.md`` §1.1.
     """
     if not show_overlay:
         return pil_image
@@ -92,8 +94,12 @@ def draw_compliance_overlay(
     img = pil_image.convert("RGB")
     w, h = img.size
 
-    # Estimate the head height fraction in the final image
-    face_h_fraction = (head_measure_ratio ** 0.5)
+    # Aspect-aware face height fraction.
+    # For a square photo (w == h) this reduces to sqrt(head_measure_ratio).
+    # For a portrait photo (w < h), the actual face is shorter than naive sqrt
+    # because the algorithm scales width and height by the same factor.
+    aspect_w_over_h = w / h
+    face_h_fraction = (head_measure_ratio * aspect_w_over_h) ** 0.5
     head_h_fraction_with_hair = min(0.95, face_h_fraction * HAIR_VS_FACE_MULTIPLIER)
 
     # Draw the EXPECTED head zone as a dashed cyan rectangle

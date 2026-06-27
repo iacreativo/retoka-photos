@@ -59,7 +59,7 @@ _ACTIVE_PATH = None  # set on first successful load/write
 # Bump this whenever the defaults in ``demo/assets/size_list_ES.csv`` change.
 # Any stored overrides that don't match this version are silently discarded
 # on next read, so the new CSV defaults take effect immediately after deploy.
-CSV_VERSION = 4
+CSV_VERSION = 5
 
 
 def _resolve_path() -> str:
