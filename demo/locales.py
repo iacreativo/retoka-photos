@@ -226,6 +226,27 @@ LOCALES = {
         "ko": {"label": "규정 가이드 표시"},
         "es": {"label": "Mostrar guía de cumplimiento"},
     },
+    "reset_size_button": {
+        "en": {"label": "🔄 Reset this size to defaults"},
+        "zh": {"label": "🔄 恢复此尺寸的默认值"},
+        "ja": {"label": "🔄 このサイズをデフォルトに戻す"},
+        "ko": {"label": "🔄 이 크기를 기본값으로 재설정"},
+        "es": {"label": "🔄 Restablecer valores predeterminados"},
+    },
+    "size_saved_status": {
+        "en": {"label": "✅ Custom values saved for this size"},
+        "zh": {"label": "✅ 已保存此尺寸的自定义值"},
+        "ja": {"label": "✅ このサイズのカスタム値を保存しました"},
+        "ko": {"label": "✅ 이 크기의 사용자 값이 저장되었습니다"},
+        "es": {"label": "✅ Valores personalizados guardados para este tamaño"},
+    },
+    "size_reset_status": {
+        "en": {"label": "↩️ Restored CSV defaults for this size"},
+        "zh": {"label": "↩️ 已恢复此尺寸的 CSV 默认值"},
+        "ja": {"label": "↩️ このサイズの CSV デフォルトを復元"},
+        "ko": {"label": "↩️ 이 크기의 CSV 기본값을 복원했습니다"},
+        "es": {"label": "↩️ Restaurados los valores predeterminados del CSV"},
+    },
     "show_requirements": {
         "en": {"label": "📖 Show size requirements"},
         "zh": {"label": "📖 显示尺寸要求"},

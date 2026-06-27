@@ -4,6 +4,7 @@ import pathlib
 from demo.locales import LOCALES
 from demo.processor import IDPhotoProcessor
 from demo.photo_requirements import render_requirements as render_reqs
+from demo.custom_sizes_store import get_profile, set_profile, reset_profile, has_custom
 
 """
 只裁切模式:
@@ -1202,6 +1203,19 @@ def create_ui(
                         label=LOCALES["top_distance"][DEFAULT_LANG]["label"],
                         interactive=True,
                     )
+                    # Reset current size to its CSV defaults (drops any
+                    # user-saved custom tweak from custom_sizes.json)
+                    reset_size_button = gr.Button(
+                        value=LOCALES.get("reset_size_button", {}).get(
+                            DEFAULT_LANG, {"label": "🔄 Restablecer valores predeterminados de este tamaño"}
+                        )["label"] if isinstance(LOCALES.get("reset_size_button", {}).get(DEFAULT_LANG), dict) else "🔄 Restablecer valores predeterminados",
+                        variant="secondary",
+                        size="sm",
+                    )
+                    saved_status = gr.Markdown(
+                        value="",
+                        elem_id="saved_status",
+                    )
 
                     image_kb_options = gr.Radio(
                         choices=LOCALES["image_kb"][DEFAULT_LANG]["choices"],
@@ -1842,7 +1856,17 @@ def create_ui(
                         top_distance_option:       gr.update(),
                         size_requirements_panel:   gr.update(value=render_reqs(size_option_item, lang)),
                     }
-                _, _, head_ratio, head_height, top_dist = size_data[:5]
+                # Prefer saved custom profile (per-size tweaks) over CSV defaults
+                csv_default = (
+                    int(size_data[0]),
+                    int(size_data[1]),
+                    float(size_data[2]),
+                    float(size_data[3]),
+                    float(size_data[4]),
+                )
+                _h, _w, head_ratio, head_height, top_dist = get_profile(
+                    size_option_item, csv_default
+                )
                 return {
                     head_measure_ratio_option: gr.update(value=head_ratio),
                     head_height_ratio_option:  gr.update(value=head_height),
@@ -1858,6 +1882,57 @@ def create_ui(
                     head_height_ratio_option,
                     top_distance_option,
                     size_requirements_panel,
+                ],
+            )
+
+            # ----- Auto-save: cuando el usuario ajusta cualquier slider,
+            # guarda los valores para el tamaño actualmente seleccionado.
+            # Asi, al volver a ese tamaño, mantiene los ajustes hechos.
+            def save_slider_changes(size_key, head_ratio, head_height, top_dist):
+                if not size_key:
+                    return ""
+                # Obtener (h, w) del size_key para guardar el perfil completo
+                size_data = LOCALES["size_list"][DEFAULT_LANG]["develop"].get(size_key)
+                if not size_data or len(size_data) < 5:
+                    return ""
+                h, w = int(size_data[0]), int(size_data[1])
+                set_profile(size_key, h, w, head_ratio, head_height, top_dist)
+                return LOCALES["size_saved_status"][DEFAULT_LANG]["label"]
+
+            # Cualquier cambio en los 3 sliders dispara el guardado
+            for slider in (head_measure_ratio_option, head_height_ratio_option, top_distance_option):
+                slider.input(
+                    save_slider_changes,
+                    inputs=[size_list_options, head_measure_ratio_option,
+                            head_height_ratio_option, top_distance_option],
+                    outputs=[saved_status],
+                )
+
+            # ----- Reset: descarta los ajustes guardados y restaura CSV.
+            def reset_current_size(size_key):
+                if not size_key:
+                    return [gr.update()] * 3 + [""]
+                reset_profile(size_key)
+                size_data = LOCALES["size_list"][DEFAULT_LANG]["develop"].get(size_key)
+                if not size_data or len(size_data) < 5:
+                    return [gr.update()] * 3 + [""]
+                _, _, hr, hh, td = size_data[:5]
+                msg = LOCALES["size_reset_status"][DEFAULT_LANG]["label"]
+                return (
+                    gr.update(value=hr),
+                    gr.update(value=hh),
+                    gr.update(value=td),
+                    msg,
+                )
+
+            reset_size_button.click(
+                reset_current_size,
+                inputs=[size_list_options],
+                outputs=[
+                    head_measure_ratio_option,
+                    head_height_ratio_option,
+                    top_distance_option,
+                    saved_status,
                 ],
             )
 
