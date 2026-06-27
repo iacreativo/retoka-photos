@@ -5,7 +5,13 @@
 > controlan el recorte de las fotos. Esto sirve como guía de referencia para el
 > fotógrafo y como punto de partida verificable para futuros ajustes.
 
-> **Revisión v3 (2026-06-26):** los defaults de v2 ponían la cara demasiado
+> **Revisión v4 (2026-06-26):** ajuste fino de Infantil siguiendo la guía
+> explícita con líneas de medida (`como-hacer-una-foto-tamano-infantil-preview-principal.webp`).
+> La guía marca top a 5 %, ojos a 31 %, barbilla a 58 % — eso lleva a
+> `ratio=0.17, td=0.05, hh=0.38`. v3 usaba td=0.10 que era más conservador;
+> v4 honra exactamente las proporciones de la guía del usuario.
+>
+> **v3 (2026-06-26):** los defaults de v2 ponían la cara demasiado
 > grande para Infantil (chin 90 %, head_h 85 %) y demasiado chica para
 > Pasaporte (chin 75 %, head_h 65 %, debajo del mínimo ICAO de 69 %). v3 los
 > recalibra contra imágenes de referencia reales: para Infantil se usa el
@@ -69,22 +75,35 @@ hh = chin% − (1.30 × √r) / 2 = td + 0.80 × √r
 | **SEDENA** (Cartilla Militar) | Secretaría de la Defensa Nacional, *Requisitos de cartilla* | ICAO + cabeza ligeramente más grande (≈ 75–82 %). |
 | **SEP / UNAM** (Título profesional) | SEP/UNAM, *Lineamientos para título profesional* | Formato retrato ejecutivo: 1/3 cara, 2/3 cuerpo. |
 
-### 2.1 Estilo infantil (25×30 mm) — derivado de referencia visual
+### 2.1 Estilo infantil (25×30 mm) — derivado de guía visual con measurement lines
 
-No existe spec oficial mexicana para "foto infantil 2.5×3 cm". La convención
-de estudio más usada en México (y la que el cliente prefiere, confirmada con
-imagen de referencia real `foto-infantil-878x1024.webp`):
+No existe spec oficial mexicana para "foto infantil 2.5×3 cm". El cliente
+proporcionó una guía explícita con líneas de medida
+(`como-hacer-una-foto-tamano-infantil-preview-principal.webp`) que marca
+exactamente las proporciones que busca. Midiendo píxeles del panel-izquierdo
+de la guía (la imagen grande con las líneas rojas y amarillas):
 
-- **Top margin:** ~10 % del frame
-- **Chin:** ~62 % del frame
-- **Head_h (cara + pelo):** ~52 % del frame
-- **Shoulders visibles** abajo
-- **Estilo:** credencial escolar estándar (NO extreme close-up)
+- **Línea roja superior (top del pelo):** y ≈ 40 px sobre rect rojo de altura 530 → **5 %** del frame
+- **Línea amarilla (ojos):** y ≈ 180 px → **31 %** del frame
+- **Línea roja inferior (barbilla):** y ≈ 325 px → **58 %** del frame
+- **Por debajo de barbilla:** hombros y pecho visibles (~42 % del frame)
 
-Midiendo píxeles de la imagen referencia (878×1024 px):
-- top of hair a y ≈ 80 px (≈ 9 %)
-- chin a y ≈ 640 px (≈ 62 %)
-- head_h ≈ 560/1024 = 54.7 %
+Comparación con la referencia anterior (`foto-infantil-878x1024.webp`):
+
+| Referencia | top margin | chin | head_h |
+|------------|-----------|------|--------|
+| `como-hacer-una-foto-tamano-infantil` (guía con líneas) | 5 % | 58 % | 53 % |
+| `foto-infantil-878x1024` (print final) | 9 % | 62 % | 53 % |
+
+Mismo head_h pero diferente top margin. La guía explícita gana porque viene
+con measurement lines; el print final probablemente se hizo con un margen
+adicional al encuadrar.
+
+**Resultado para infantil:**
+- `td = 0.05` (siguiendo la guía explícita)
+- `chin = 0.58` → `ratio = 0.17`
+- `head_h = 53 %` (en rango SCHOOL 45–65 %)
+- `hh = 0.38` (face center a 38 %, eyes a 31 % según la guía)
 
 ---
 
@@ -92,17 +111,21 @@ Midiendo píxeles de la imagen referencia (878×1024 px):
 
 ### 3.1 Infantil 2.5×3 cm (354×295 px @ 300 DPI)
 
-- **Objetivo:** estilo credencial escolar. top 10 %, chin 62 %, head_h 52 %.
+- **Objetivo:** estilo credencial escolar con guía explícita (top 5 %, ojos
+  31 %, chin 58 %, hombros visibles abajo).
 - **Cálculo:**
-  - `td = 0.10` (≈ 9 % medido)
-  - `chin = 0.62` → `r = ((0.62 − 0.10) / 1.30)² = (0.400)² = 0.160`
-  - `hh = 0.10 + 0.80 × √0.16 = 0.10 + 0.320 = 0.420`
-- **Resultado:** `ratio=0.16, td=0.10, hh=0.42`
-- **Verificación:** chin = 10 % + 1.30 × 0.400 = **62.0 %** ✓
-- **head_h** = 1.30 × 0.400 = **52.0 %** ✓ (dentro de SCHOOL 45–65 %)
-- **Nota:** un valor anterior (v2) usaba `ratio=0.43` que producía cara al
-  85 % del frame. Eso era incorrecto — ese estilo solo se usa en algunos
-  países asiáticos, no en México.
+  - `td = 0.05` (top del pelo según línea roja superior de la guía)
+  - `chin = 0.58` → `r = ((0.58 − 0.05) / 1.30)² = (0.408)² = 0.166`
+  - `hh = 0.05 + 0.80 × √0.166 = 0.05 + 0.326 = 0.376`
+- **Resultado:** `ratio=0.17, td=0.05, hh=0.38`
+- **Verificación:**
+  - chin = 5 % + 1.30 × 0.412 = **58.6 %** ✓ (la guía marca 58 %)
+  - head_h = 1.30 × 0.412 = **53.6 %** ✓ (en rango SCHOOL 45–65 %)
+  - eye position = td + 0.49 × head_h = 0.05 + 0.262 = **31 %** ✓ (match exacto con la línea amarilla de la guía)
+- **Notas:**
+  - v2 usaba `ratio=0.43` → cara al 85 % del frame (incorrecto, estilo extreme close-up asiático).
+  - v3 usaba `ratio=0.16, td=0.10` → referencia del cliente `foto-infantil-878x1024` (print final con margen adicional).
+  - **v4** usa `ratio=0.17, td=0.05` → alineado con la guía con measurement lines (`como-hacer-una-foto-tamano-infantil`).
 
 ### 3.2 Credencial / Pasaporte MX 3.5×4.5 cm (531×413 px @ 300 DPI)
 
@@ -182,11 +205,11 @@ Midiendo píxeles de la imagen referencia (878×1024 px):
 
 ---
 
-## 4. Tabla resumen (v3)
+## 4. Tabla resumen (v4)
 
 | Tamaño | ratio | td | hh | chin % | head_h % | Estándar |
 |--------|-------|------|------|--------|----------|----------|
-| Infantil 2.5×3 cm | **0.16** | 0.10 | 0.42 | 62 % | 52 % | SCHOOL |
+| Infantil 2.5×3 cm | **0.17** | 0.05 | 0.38 | 59 % | 54 % | SCHOOL |
 | Pasaporte MX 3.5×4.5 cm | **0.33** | 0.09 | 0.55 | 84 % | 75 % | ICAO |
 | Cartilla Militar 3.5×4.5 cm | **0.37** | 0.08 | 0.57 | 87 % | 79 % | ICAO |
 | Visa Americana 5×5 cm | **0.19** | 0.10 | 0.45 | 67 % | 57 % | US_VISA |
@@ -195,18 +218,18 @@ Midiendo píxeles de la imagen referencia (878×1024 px):
 | Diploma 5×7 cm | **0.12** | 0.08 | 0.36 | 52 % | 44 % | SCHOOL |
 | Título Universitario 6×9 cm | **0.09** | 0.08 | 0.32 | 48 % | 40 % | PORTRAIT |
 
-### 4.1 Diff contra v2 (qué se ajustó y por qué)
+### 4.1 Diff contra versiones anteriores
 
-| Tamaño | v2 ratio | v3 ratio | Razón |
-|--------|----------|----------|-------|
-| Infantil | 0.43 | **0.16** | Cara al 85 % era incorrecto. Estilo mexicano pide ~52 %. |
-| Pasaporte MX | 0.25 | **0.33** | Head_h 65 % estaba debajo del mínimo ICAO (69 %). |
-| Cartilla | 0.27 | **0.37** | Subir al rango alto ICAO + un punto (estilo SEDENA). |
-| Visa US | 0.18 | **0.19** | Ajuste fino (era casi correcto). |
-| Visa MX | 0.25 | **0.33** | Igual corrección que Pasaporte (ambos ICAO). |
-| Óvalo | 0.15 | 0.15 | Sin cambio. |
-| Diploma | 0.13 | **0.12** | Ajuste fino (era casi correcto). |
-| Título | 0.10 | **0.09** | Ajuste fino (era casi correcto). |
+| Tamaño | v1 | v2 | v3 | **v4** | Cambio v3→v4 + razón |
+|--------|------|------|------|--------|---------------------|
+| Infantil | 0.50 | 0.43 | 0.16 | **0.17** | Ajustado a guía explícita: top 5 % (antes 10 %), hh 0.38 (antes 0.42). Coincide con measurement lines de `como-hacer-una-foto-tamano-infantil`. |
+| Pasaporte MX | 0.35 | 0.35 | 0.33 | 0.33 | sin cambio |
+| Cartilla | 0.35 | 0.35 | 0.37 | 0.37 | sin cambio |
+| Visa US | 0.25 | 0.25 | 0.19 | 0.19 | sin cambio |
+| Visa MX | 0.40 | 0.40 | 0.33 | 0.33 | sin cambio |
+| Óvalo | 0.18 | 0.18 | 0.15 | 0.15 | sin cambio |
+| Diploma | 0.22 | 0.22 | 0.12 | 0.12 | sin cambio |
+| Título | 0.15 | 0.15 | 0.09 | 0.09 | sin cambio |
 
 ---
 
@@ -293,6 +316,9 @@ JSON. Si subimos `CSV_VERSION`, todos los overrides guardados con un
   Infantil, muy chica para Pasaporte).
 - **v3:** defaults corregidos contra imagen de referencia real del cliente
   para Infantil y contra ICAO mid-range para Pasaporte/Cartilla.
+- **v4:** Infantil afinado contra guía explícita con measurement lines
+  (`como-hacer-una-foto-tamano-infantil`): td 0.10 → 0.05, hh 0.42 → 0.38.
+  Eye position queda en 31 % (match exacto con la línea amarilla de la guía).
 
 ---
 
@@ -310,6 +336,11 @@ JSON. Si subimos `CSV_VERSION`, todos los overrides guardados con un
 - **Imagen de referencia para Infantil (foto-infantil-878x1024.webp):**
   archivo de muestra del cliente, dic. 2025. Estilo credencial escolar
   mexicana con top margin ~9 %, chin ~62 %, head_h ~53 %.
+- **Guía con measurement lines para Infantil
+  (como-hacer-una-foto-tamano-infantil-preview-principal.webp):** archivo
+  de muestra del cliente, jun. 2026. Guía explícita con líneas rojas
+  (top del pelo y barbilla) y amarilla (ojos). Top 5 %, ojos 31 %, barbilla
+  58 %. Es la fuente primaria de v4.
 - **PEMEX / INE / UNAM** (para tamaños no-ICAO): cada universidad / dependencia
   tiene lineamientos internos no publicados oficialmente; se usa la convención
   de retrato académico estándar.
