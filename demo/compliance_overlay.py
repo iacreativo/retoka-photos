@@ -10,6 +10,9 @@ The overlay shows:
   - Green solid rectangle: the ACTUAL head bounding box (from face detection)
   - Status text: "OK" or "REVISAR" + head height percentage
 
+For the source of every default value (ratio / head_height / top_distance) and
+the math behind it, see ``docs/SIZE_SPECS.md``.
+
 Usage:
     from demo.compliance_overlay import draw_compliance_overlay
     annotated = draw_compliance_overlay(image, face_bbox, expected_profile)
@@ -21,16 +24,21 @@ from PIL import Image, ImageDraw, ImageFont
 
 # Compliance windows per standard. Each entry is (min_head_pct, max_head_pct)
 # of the photo height the head (face + hair) should occupy.
+#
+# The thresholds and ranges were derived from official sources (ICAO 9303,
+# US DS-160, SRE, SEDENA) — see ``docs/SIZE_SPECS.md`` for the full citation
+# table and per-size calculation.
 COMPLIANCE_STANDARDS = {
-    "ICAO": (0.65, 0.85),       # ICAO 9303 (passport/visa)
-    "US_VISA": (0.55, 0.75),     # US Visa (head 25-35mm / 51mm)
-    "SCHOOL": (0.50, 0.70),     # School/children (less strict)
-    "PORTRAIT": (0.35, 0.55),   # Diploma/university (more body visible)
+    "TIGHT": (0.80, 0.95),       # Infantil (face fills frame, no spec)
+    "ICAO": (0.60, 0.85),        # Pasaporte MX, Cartilla, Visa MX (ICAO 9303)
+    "US_VISA": (0.50, 0.70),     # Visa Americana (US DS-160: 49-69%)
+    "SCHOOL": (0.45, 0.65),      # Óvalo, Diploma (school/credential style)
+    "PORTRAIT": (0.30, 0.50),    # Título universitario (executive portrait)
 }
 
 # Multiplier from face-area-ratio to head-area-ratio.
 # Hair typically adds ~30-35% above the face bounding box for the head top.
-# face_h_fraction = sqrt(head_measure_ratio), then we add hair allowance.
+# face_h_fraction = sqrt(head_ratio), then we add hair allowance.
 HAIR_VS_FACE_MULTIPLIER = 1.30
 
 
@@ -41,11 +49,13 @@ def _get_standard_for_size(head_ratio: float) -> str:
     sqrt(head_ratio) * HAIR_VS_FACE_MULTIPLIER. We classify based on this.
     """
     estimated_head = (head_ratio ** 0.5) * HAIR_VS_FACE_MULTIPLIER
-    if estimated_head >= 0.70:
-        return "ICAO"
+    if estimated_head >= 0.80:
+        return "TIGHT"
     if estimated_head >= 0.60:
+        return "ICAO"
+    if estimated_head >= 0.50:
         return "US_VISA"
-    if estimated_head >= 0.48:
+    if estimated_head >= 0.45:
         return "SCHOOL"
     return "PORTRAIT"
 

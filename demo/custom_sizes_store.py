@@ -56,6 +56,11 @@ _STORE_PATH = os.path.join(_HERE, "custom_sizes.json")
 _LOCK = threading.Lock()
 _ACTIVE_PATH = None  # set on first successful load/write
 
+# Bump this whenever the defaults in ``demo/assets/size_list_ES.csv`` change.
+# Any stored overrides that don't match this version are silently discarded
+# on next read, so the new CSV defaults take effect immediately after deploy.
+CSV_VERSION = 2
+
 
 def _resolve_path() -> str:
     """Pick the first candidate path we can actually write to.
@@ -81,7 +86,9 @@ def _resolve_path() -> str:
 
 def _load() -> Dict[str, list]:
     """Read the JSON file from the first available persistent path.
-    Returns empty dict if no path is writable."""
+    Returns empty dict if no path is writable, or if the stored version
+    doesn't match ``CSV_VERSION`` (in which case stored overrides are
+    discarded so the latest CSV defaults take effect)."""
     path = _resolve_path()
     if path is None or not os.path.exists(path):
         return {}
@@ -90,6 +97,11 @@ def _load() -> Dict[str, list]:
             data = json.load(f)
         if not isinstance(data, dict):
             return {}
+        # Version check: if the file was written with an older CSV_VERSION
+        # we silently drop it so new CSV defaults win. This makes deploys of
+        # updated defaults work without manual intervention.
+        if data.get("__version__", 0) != CSV_VERSION:
+            return {}
         return data
     except (OSError, json.JSONDecodeError):
         return {}
@@ -97,14 +109,18 @@ def _load() -> Dict[str, list]:
 
 def _save(data: Dict[str, list]) -> bool:
     """Atomically write the JSON file to the first available persistent
-    path. Returns True on success, False if no writable path exists."""
+    path. Returns True on success, False if no writable path exists.
+    Always stamps the current ``CSV_VERSION`` into the file so future
+    version mismatches can be detected."""
     path = _resolve_path()
     if path is None:
         return False
     try:
+        payload = dict(data)
+        payload["__version__"] = CSV_VERSION
         tmp = path + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+            json.dump(payload, f, indent=2, ensure_ascii=False)
         os.replace(tmp, path)
         return True
     except OSError:
