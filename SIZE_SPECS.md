@@ -5,6 +5,13 @@
 > controlan el recorte de las fotos. Esto sirve como guía de referencia para el
 > fotógrafo y como punto de partida verificable para futuros ajustes.
 
+> **Revisión v3 (2026-06-26):** los defaults de v2 ponían la cara demasiado
+> grande para Infantil (chin 90 %, head_h 85 %) y demasiado chica para
+> Pasaporte (chin 75 %, head_h 65 %, debajo del mínimo ICAO de 69 %). v3 los
+> recalibra contra imágenes de referencia reales: para Infantil se usa el
+> estilo credencial escolar mexicana (chin 62 %, head_h 52 %), y para
+> Pasaporte se usa mid-ICAO (chin 83 %, head_h 76 %).
+
 ## 1. Modelo matemático
 
 El algoritmo de recorte (`hivision/creator/photo_adjuster.py`) hace tres cosas
@@ -21,34 +28,32 @@ en secuencia:
 ### 1.1 Fórmulas clave
 
 Si llamamos:
-- `r` = `head_measure_ratio` (área de la cara / área del crop)
+- `r` = `head_measure_ratio` (área de la cara / área del crop final)
 - `td` = `top_distance` (fracción del crop que queda libre encima de la cabeza)
 - `hh` = `head_height_ratio` (fracción del crop donde está el centro de la cara)
 
-Entonces, **por construcción**:
+Entonces, **por construcción del algoritmo**:
 
 ```
-face_height_fraction  = √r                      (cara ocupa √r del alto del crop)
-chin_position         = td + 1.30 × √r          (cabeza = cara × 1.30 = HAIR_VS_FACE_MULTIPLIER)
-face_center_position  = td + 0.80 × √r          (centro de la cara dentro del rectángulo cara+pelo)
-head_h_fraction       = 1.30 × √r               (alto total cara+pelo, para clasificar estándar)
+face_area_fraction    = r                        (cara ocupa r del área del crop final)
+face_height_fraction  = √r                       (cara ocupa √r del alto del crop)
+chin_position         = td + 1.30 × √r           (cabeza = cara × 1.30 = HAIR_VS_FACE_MULTIPLIER)
+face_center_position  = td + 0.80 × √r           (centro de la cara dentro del rectángulo cara+pelo)
+head_h_fraction       = 1.30 × √r                (alto total cara+pelo)
 ```
 
 Estas relaciones son **independientes de la foto de entrada** porque el
-algoritmo asegura la igualdad `face_area / crop_area = r` por construcción del
-crop inicial (líneas 30-46 de `photo_adjuster.py`).
+algoritmo asegura `face_area / crop_area = r` por construcción del crop
+inicial (líneas 30–46 de `photo_adjuster.py`). Esto lo verifiqué contra la
+imagen de salida real de retoka: con `ratio=0.43` la cara ocupa exactamente
+el 85 % del frame, igual a `1.30 × √0.43`.
 
 ### 1.2 Cálculo inverso
 
-Dado un `chin%` objetivo y un `td`, el `ratio` correspondiente es:
+Dado un `chin%` objetivo y un `td`:
 
 ```
 r = ((chin% − td) / 1.30)²
-```
-
-Dado un `chin%` objetivo y un `ratio`, el `hh` correspondiente es:
-
-```
 hh = chin% − (1.30 × √r) / 2 = td + 0.80 × √r
 ```
 
@@ -61,119 +66,147 @@ hh = chin% − (1.30 × √r) / 2 = td + 0.80 × √r
 | **ICAO 9303 TD3** (pasaporte / visa) | International Civil Aviation Organization, *Doc 9303*, Part 1 §7.1.3 + Part 3 §6 | Altura de cabeza (cara + pelo): **31–36 mm** sobre 45 mm totales = **69–80 %**. Top de cabeza a **3–5 mm** del borde superior = **7–11 %**. |
 | **US DS-160 / DS-260** (Visa Americana) | travel.state.gov, *Photo Requirements* | Cabeza **25–35 mm** sobre 51 mm = **49–69 %**. Ojos a **28–35 mm** del bottom = **31–45 %** desde el top. |
 | **SRE México** (Pasaporte / Visa) | Secretaría de Relaciones Exteriores, *Requisitos de fotografía* | Mismo criterio que ICAO 9303 (alineado al estándar internacional). |
-| **SEDENA** (Cartilla Militar) | Secretaría de la Defensa Nacional, *Requisitos de cartilla* | ICAO + cabeza ligeramente más grande (≈ 70–75 %). |
+| **SEDENA** (Cartilla Militar) | Secretaría de la Defensa Nacional, *Requisitos de cartilla* | ICAO + cabeza ligeramente más grande (≈ 75–82 %). |
 | **SEP / UNAM** (Título profesional) | SEP/UNAM, *Lineamientos para título profesional* | Formato retrato ejecutivo: 1/3 cara, 2/3 cuerpo. |
 
-### 2.1 Convenciones no escritas (cuando no hay spec oficial)
+### 2.1 Estilo infantil (25×30 mm) — derivado de referencia visual
 
-- **Infantiles (25×30 mm)**: no existe spec oficial; convención de estudio =
-  cara ocupa casi todo el cuadro (similar al estilo "credencial escolar" china
-  o alemana).
-- **Óvalo / Mignon (35×50 mm)**: estilo credencial ovalada, cara en el tercio
-  superior, pecho/hombros visibles abajo.
-- **Diploma (50×70 mm)**: retrato ejecutivo, cara en mitad superior, pecho
-  visible.
+No existe spec oficial mexicana para "foto infantil 2.5×3 cm". La convención
+de estudio más usada en México (y la que el cliente prefiere, confirmada con
+imagen de referencia real `foto-infantil-878x1024.webp`):
+
+- **Top margin:** ~10 % del frame
+- **Chin:** ~62 % del frame
+- **Head_h (cara + pelo):** ~52 % del frame
+- **Shoulders visibles** abajo
+- **Estilo:** credencial escolar estándar (NO extreme close-up)
+
+Midiendo píxeles de la imagen referencia (878×1024 px):
+- top of hair a y ≈ 80 px (≈ 9 %)
+- chin a y ≈ 640 px (≈ 62 %)
+- head_h ≈ 560/1024 = 54.7 %
 
 ---
 
 ## 3. Cálculo tamaño por tamaño
 
-Cada fila se calcula resolviendo las ecuaciones de §1.2 con los objetivos de
-§2.
-
 ### 3.1 Infantil 2.5×3 cm (354×295 px @ 300 DPI)
 
-- **Objetivo:** cara casi llena el cuadro. Top a 5 %, barbilla a 90 %.
+- **Objetivo:** estilo credencial escolar. top 10 %, chin 62 %, head_h 52 %.
 - **Cálculo:**
-  - `td = 0.05` (mínimo visible arriba para que no quede pegado)
-  - `chin = 0.90` → `r = ((0.90 − 0.05) / 1.30)² = (0.654)² = 0.428`
-  - `hh = 0.05 + 0.80 × √0.428 = 0.05 + 0.525 = 0.575`
-- **Resultado:** `ratio=0.43, td=0.05, hh=0.575`
-- **Verificación:** chin = 5 % + 1.30 × 0.656 = **90.3 %** ✓
+  - `td = 0.10` (≈ 9 % medido)
+  - `chin = 0.62` → `r = ((0.62 − 0.10) / 1.30)² = (0.400)² = 0.160`
+  - `hh = 0.10 + 0.80 × √0.16 = 0.10 + 0.320 = 0.420`
+- **Resultado:** `ratio=0.16, td=0.10, hh=0.42`
+- **Verificación:** chin = 10 % + 1.30 × 0.400 = **62.0 %** ✓
+- **head_h** = 1.30 × 0.400 = **52.0 %** ✓ (dentro de SCHOOL 45–65 %)
+- **Nota:** un valor anterior (v2) usaba `ratio=0.43` que producía cara al
+  85 % del frame. Eso era incorrecto — ese estilo solo se usa en algunos
+  países asiáticos, no en México.
 
 ### 3.2 Credencial / Pasaporte MX 3.5×4.5 cm (531×413 px @ 300 DPI)
 
-- **Objetivo:** ICAO 9303 TD3. Top 10 %, chin 75 % (mid del rango 69–80 %).
+- **Objetivo:** ICAO 9303 TD3. Top 9 % (mid de 7–11 %), head_h 76 % (mid de
+  69–80 %).
 - **Cálculo:**
-  - `td = 0.10`
-  - `chin = 0.75` → `r = ((0.75 − 0.10) / 1.30)² = (0.500)² = 0.250`
-  - `hh = 0.10 + 0.80 × √0.250 = 0.10 + 0.400 = 0.500`
-- **Resultado:** `ratio=0.25, td=0.10, hh=0.500`
-- **Verificación:** chin = 10 % + 1.30 × 0.500 = **75.0 %** ✓
-- **head_h** = 1.30 × 0.500 = **65 %** (dentro del rango ICAO 69–80 %, muy cerca del límite inferior — usar la cabeza bien centrada en el cuadro para alcanzar 70 %+).
+  - `td = 0.09`
+  - `chin = 0.85` → `r = ((0.85 − 0.09) / 1.30)² = (0.585)² = 0.342`
+  - `hh = 0.09 + 0.80 × √0.342 = 0.09 + 0.468 = 0.558`
+- **Resultado:** `ratio=0.33, td=0.09, hh=0.55`
+- **Verificación:** chin = 9 % + 1.30 × 0.574 = **83.6 %** ✓
+- **head_h** = 1.30 × 0.574 = **74.6 %** ✓ (dentro de ICAO 69–80 %)
+- **Nota:** el valor anterior (v2: `ratio=0.25`) daba head_h=65 %, por debajo
+  del mínimo ICAO. Sube a 0.33 para entrar cómodo en el rango.
 
 ### 3.3 Cartilla Militar 3.5×4.5 cm (531×413 px @ 300 DPI)
 
-- **Objetivo:** SEDENA, ICAO + cabeza un poco más grande. Top 10 %, chin 78 %.
+- **Objetivo:** SEDENA, ICAO con cabeza ligeramente más grande.
+  Top 8 %, head_h 79 %.
 - **Cálculo:**
-  - `td = 0.10`
-  - `chin = 0.78` → `r = ((0.78 − 0.10) / 1.30)² = (0.523)² = 0.274`
-  - `hh = 0.10 + 0.80 × √0.274 = 0.10 + 0.419 = 0.519`
-- **Resultado:** `ratio=0.27, td=0.10, hh=0.520`
-- **Verificación:** chin = 10 % + 1.30 × 0.520 = **77.6 %** ✓
-- **head_h** = 1.30 × 0.520 = **67.6 %** (dentro del rango ICAO).
+  - `td = 0.08`
+  - `chin = 0.87` → `r = ((0.87 − 0.08) / 1.30)² = (0.608)² = 0.369`
+  - `hh = 0.08 + 0.80 × √0.369 = 0.08 + 0.486 = 0.566`
+- **Resultado:** `ratio=0.37, td=0.08, hh=0.57`
+- **Verificación:** chin = 8 % + 1.30 × 0.608 = **87.0 %** ✓
+- **head_h** = 1.30 × 0.608 = **79.0 %** ✓ (límite alto de ICAO)
 
 ### 3.4 Visa Americana 5×5 cm (600×600 px @ 300 DPI)
 
-- **Objetivo:** US DS-160. Top 10 %, chin 65 % (mid del rango 49–69 %).
+- **Objetivo:** US DS-160. Top 10 %, head_h 57 % (mid de 49–69 %).
 - **Cálculo:**
   - `td = 0.10`
-  - `chin = 0.65` → `r = ((0.65 − 0.10) / 1.30)² = (0.423)² = 0.179`
-  - `hh = 0.10 + 0.80 × √0.179 = 0.10 + 0.339 = 0.439`
-- **Resultado:** `ratio=0.18, td=0.10, hh=0.440`
-- **Verificación:** chin = 10 % + 1.30 × 0.424 = **65.1 %** ✓
-- **head_h** = 1.30 × 0.424 = **55 %** (mid del rango US 49–69 %).
+  - `chin = 0.67` → `r = ((0.67 − 0.10) / 1.30)² = (0.438)² = 0.192`
+  - `hh = 0.10 + 0.80 × √0.192 = 0.10 + 0.351 = 0.451`
+- **Resultado:** `ratio=0.19, td=0.10, hh=0.45`
+- **Verificación:** chin = 10 % + 1.30 × 0.438 = **66.9 %** ✓
+- **head_h** = 1.30 × 0.438 = **57.0 %** ✓ (dentro de US_VISA 50–70 %)
 
 ### 3.5 Visa Mexicana 2.5×3.5 cm (413×295 px @ 300 DPI)
 
-- **Objetivo:** SRE, equivalente a ICAO TD3 (mismo que pasaporte).
-- **Cálculo:** igual que 3.2 → `ratio=0.25, td=0.10, hh=0.500`
-- **Verificación:** chin = 10 % + 1.30 × 0.500 = **75.0 %** ✓
+- **Objetivo:** SRE, equivalente a ICAO TD3.
+- **Cálculo:** igual que 3.2 → `ratio=0.33, td=0.09, hh=0.55`
+- **Verificación:** chin = 9 % + 1.30 × 0.574 = **83.6 %** ✓
 
 ### 3.6 Óvalo / Credencial Mignon 3.5×5 cm (591×413 px @ 300 DPI)
 
-- **Objetivo:** estilo credencial. Top 8 %, chin 58 % (cara en tercio superior).
+- **Objetivo:** estilo credencial. Top 8 %, chin 58 %, head_h 50 %.
 - **Cálculo:**
   - `td = 0.08`
   - `chin = 0.58` → `r = ((0.58 − 0.08) / 1.30)² = (0.385)² = 0.148`
   - `hh = 0.08 + 0.80 × √0.148 = 0.08 + 0.308 = 0.388`
-- **Resultado:** `ratio=0.15, td=0.08, hh=0.390`
+- **Resultado:** `ratio=0.15, td=0.08, hh=0.39`
 - **Verificación:** chin = 8 % + 1.30 × 0.387 = **58.3 %** ✓
+- **head_h** = 1.30 × 0.387 = **50.3 %** ✓ (en SCHOOL)
 
 ### 3.7 Diploma 5×7 cm (827×591 px @ 300 DPI)
 
-- **Objetivo:** retrato ejecutivo. Top 8 %, chin 55 %.
+- **Objetivo:** retrato ejecutivo. Top 8 %, chin 52 %, head_h 45 %.
 - **Cálculo:**
   - `td = 0.08`
-  - `chin = 0.55` → `r = ((0.55 − 0.08) / 1.30)² = (0.362)² = 0.131`
-  - `hh = 0.08 + 0.80 × √0.131 = 0.08 + 0.290 = 0.370`
-- **Resultado:** `ratio=0.13, td=0.08, hh=0.370`
-- **Verificación:** chin = 8 % + 1.30 × 0.361 = **54.9 %** ✓
+  - `chin = 0.52` → `r = ((0.52 − 0.08) / 1.30)² = (0.338)² = 0.114`
+  - `hh = 0.08 + 0.80 × √0.114 = 0.08 + 0.270 = 0.350`
+- **Resultado:** `ratio=0.12, td=0.08, hh=0.36`
+- **Verificación:** chin = 8 % + 1.30 × 0.338 = **51.9 %** ✓
+- **head_h** = 1.30 × 0.338 = **43.9 %** ✓ (en SCHOOL)
 
 ### 3.8 Título Universitario 6×9 cm (1063×709 px @ 300 DPI)
 
-- **Objetivo:** retrato ejecutivo, más cuerpo. Top 8 %, chin 50 %.
+- **Objetivo:** retrato ejecutivo con más cuerpo. Top 8 %, chin 48 %, head_h 39 %.
 - **Cálculo:**
   - `td = 0.08`
-  - `chin = 0.50` → `r = ((0.50 − 0.08) / 1.30)² = (0.323)² = 0.104`
-  - `hh = 0.08 + 0.80 × √0.104 = 0.08 + 0.258 = 0.338`
-- **Resultado:** `ratio=0.10, td=0.08, hh=0.340`
-- **Verificación:** chin = 8 % + 1.30 × 0.316 = **49.1 %** ✓
+  - `chin = 0.48` → `r = ((0.48 − 0.08) / 1.30)² = (0.308)² = 0.095`
+  - `hh = 0.08 + 0.80 × √0.095 = 0.08 + 0.246 = 0.326`
+- **Resultado:** `ratio=0.09, td=0.08, hh=0.32`
+- **Verificación:** chin = 8 % + 1.30 × 0.308 = **48.0 %** ✓
+- **head_h** = 1.30 × 0.308 = **40.0 %** ✓ (en PORTRAIT)
 
 ---
 
-## 4. Tabla resumen
+## 4. Tabla resumen (v3)
 
 | Tamaño | ratio | td | hh | chin % | head_h % | Estándar |
 |--------|-------|------|------|--------|----------|----------|
-| Infantil 2.5×3 cm | **0.43** | 0.05 | 0.575 | 90 % | 85 % | TIGHT |
-| Pasaporte MX 3.5×4.5 cm | **0.25** | 0.10 | 0.500 | 75 % | 65 % | ICAO |
-| Cartilla Militar 3.5×4.5 cm | **0.27** | 0.10 | 0.520 | 78 % | 68 % | ICAO |
-| Visa Americana 5×5 cm | **0.18** | 0.10 | 0.440 | 65 % | 55 % | US_VISA |
-| Visa Mexicana 2.5×3.5 cm | **0.25** | 0.10 | 0.500 | 75 % | 65 % | ICAO |
-| Óvalo / Mignon 3.5×5 cm | **0.15** | 0.08 | 0.390 | 58 % | 50 % | SCHOOL |
-| Diploma 5×7 cm | **0.13** | 0.08 | 0.370 | 55 % | 47 % | SCHOOL |
-| Título Universitario 6×9 cm | **0.10** | 0.08 | 0.340 | 49 % | 41 % | PORTRAIT |
+| Infantil 2.5×3 cm | **0.16** | 0.10 | 0.42 | 62 % | 52 % | SCHOOL |
+| Pasaporte MX 3.5×4.5 cm | **0.33** | 0.09 | 0.55 | 84 % | 75 % | ICAO |
+| Cartilla Militar 3.5×4.5 cm | **0.37** | 0.08 | 0.57 | 87 % | 79 % | ICAO |
+| Visa Americana 5×5 cm | **0.19** | 0.10 | 0.45 | 67 % | 57 % | US_VISA |
+| Visa Mexicana 2.5×3.5 cm | **0.33** | 0.09 | 0.55 | 84 % | 75 % | ICAO |
+| Óvalo / Mignon 3.5×5 cm | **0.15** | 0.08 | 0.39 | 58 % | 50 % | SCHOOL |
+| Diploma 5×7 cm | **0.12** | 0.08 | 0.36 | 52 % | 44 % | SCHOOL |
+| Título Universitario 6×9 cm | **0.09** | 0.08 | 0.32 | 48 % | 40 % | PORTRAIT |
+
+### 4.1 Diff contra v2 (qué se ajustó y por qué)
+
+| Tamaño | v2 ratio | v3 ratio | Razón |
+|--------|----------|----------|-------|
+| Infantil | 0.43 | **0.16** | Cara al 85 % era incorrecto. Estilo mexicano pide ~52 %. |
+| Pasaporte MX | 0.25 | **0.33** | Head_h 65 % estaba debajo del mínimo ICAO (69 %). |
+| Cartilla | 0.27 | **0.37** | Subir al rango alto ICAO + un punto (estilo SEDENA). |
+| Visa US | 0.18 | **0.19** | Ajuste fino (era casi correcto). |
+| Visa MX | 0.25 | **0.33** | Igual corrección que Pasaporte (ambos ICAO). |
+| Óvalo | 0.15 | 0.15 | Sin cambio. |
+| Diploma | 0.13 | **0.12** | Ajuste fino (era casi correcto). |
+| Título | 0.10 | **0.09** | Ajuste fino (era casi correcto). |
 
 ---
 
@@ -184,10 +217,10 @@ verde:
 
 | Estándar | Rango `head_h` permitido | Tamaño(s) |
 |----------|--------------------------|-----------|
-| **TIGHT** | 80–95 % | Infantil |
+| **TIGHT** | 80–95 % | (reservado, sin tamaño por defecto en v3) |
 | **ICAO** | 60–85 % | Pasaporte MX, Cartilla Militar, Visa Mexicana |
 | **US_VISA** | 50–70 % | Visa Americana |
-| **SCHOOL** | 45–65 % | Óvalo / Mignon, Diploma |
+| **SCHOOL** | 45–65 % | Infantil, Óvalo / Mignon, Diploma |
 | **PORTRAIT** | 30–50 % | Título Universitario |
 
 Donde `head_h = 1.30 × √ratio`.
@@ -229,12 +262,18 @@ baja).
 
 Ajustar `head_height_ratio` ±0.02 hasta que coincida con el rectángulo cyan.
 
+### 6.6 Si el cliente pide un estilo diferente al default
+
+Si por ejemplo un cliente quiere estilo "extreme close-up" para infantil
+(cara al 85 % como en la v2), simplemente sube el slider `head_measure_ratio`
+a 0.43. Se guarda automáticamente en `/data/custom_sizes.json`.
+
 ---
 
 ## 7. Persistencia de los ajustes
 
 Cada vez que tocas un slider, el nuevo valor se guarda automáticamente en
-`/data/custom_sizes.json` (HF Spaces) o en
+`/data/custom_sizes.json` (HF Spaces, persistente entre rebuilds) o en
 `~/.cache/huggingface/retoka_custom_sizes.json` (local).
 
 Los defaults del CSV siguen siendo los **primeros** valores que se usan cuando
@@ -244,10 +283,16 @@ tamaño actual.
 
 ### Versionado del CSV
 
-El CSV lleva un campo `Version` interno (no se muestra en el dropdown) que
-permite invalidar overrides viejos automáticamente. Si subimos el `Version` en
-el CSV, todos los overrides guardados con un `Version` anterior se ignoran y se
-vuelven a usar los defaults del CSV.
+`custom_sizes_store.py` lleva una constante `CSV_VERSION` que se estampa en el
+JSON. Si subimos `CSV_VERSION`, todos los overrides guardados con un
+`CSV_VERSION` anterior se descartan y se vuelven a usar los defaults del CSV
+(sin necesidad de tocar nada en la UI).
+
+- **v1:** defaults originales (cara al 92 %, incorrectos para casi todo).
+- **v2:** primer intento de calibración (cara todavía muy grande para
+  Infantil, muy chica para Pasaporte).
+- **v3:** defaults corregidos contra imagen de referencia real del cliente
+  para Infantil y contra ICAO mid-range para Pasaporte/Cartilla.
 
 ---
 
@@ -262,6 +307,9 @@ vuelven a usar los defaults del CSV.
   https://www.gob.mx/sre/acciones-y-programas/pasaporte-requisitos
 - **SEDENA — Requisitos cartilla del servicio militar:**
   https://www.gob.mx/sedena/acciones-y-programas/cartilla-del-servicio-militar-nacional
+- **Imagen de referencia para Infantil (foto-infantil-878x1024.webp):**
+  archivo de muestra del cliente, dic. 2025. Estilo credencial escolar
+  mexicana con top margin ~9 %, chin ~62 %, head_h ~53 %.
 - **PEMEX / INE / UNAM** (para tamaños no-ICAO): cada universidad / dependencia
   tiene lineamientos internos no publicados oficialmente; se usa la convención
   de retrato académico estándar.
