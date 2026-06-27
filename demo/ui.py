@@ -985,8 +985,57 @@ def create_ui(
 
     # Use Gradio's native "Default" theme as base (light, predictable)
     # NOTE: in Gradio 6+, theme/css should be passed to launch() instead of Blocks()
+    # JavaScript injected into <head> — runs MutationObserver to force
+    # dark styles on Gradio 6 CheckboxGroup items (e.g. "Opciones extra")
+    # that CSS specificity alone can't override.
+    retoka_dark_forcer_js = """
+    <script>
+    (function() {
+        const TARGETS = ['Alinear cara', 'Voltear horizontal', 'Líneas de corte en layout',
+                         'Formato JPEG', 'Papel 5 pulgadas', 'Mostrar guía de cumplimiento'];
+        const BG = '#26282e', BG_HOVER = '#3f4451', BG_CHECKED = '#1e3a5f';
+        const FG = '#f1f5f9', BORDER = '#4a4d54', BORDER_CHECKED = '#60a5fa';
+        function force() {
+            document.querySelectorAll('label').forEach(label => {
+                const t = (label.textContent || '').trim();
+                if (!TARGETS.some(x => t.includes(x))) return;
+                const s = label.style;
+                s.setProperty('background-color', BG, 'important');
+                s.setProperty('color', FG, 'important');
+                s.setProperty('border', '1px solid ' + BORDER, 'important');
+                s.setProperty('border-radius', '8px', 'important');
+                s.setProperty('padding', '12px 14px', 'important');
+                s.setProperty('margin', '4px 0', 'important');
+                s.setProperty('min-height', '48px', 'important');
+                s.setProperty('display', 'flex', 'important');
+                s.setProperty('align-items', 'center', 'important');
+                s.setProperty('gap', '12px', 'important');
+                s.setProperty('width', '100%', 'important');
+                s.setProperty('box-sizing', 'border-box', 'important');
+                s.setProperty('cursor', 'pointer', 'important');
+                const cb = label.querySelector('input[type=checkbox]');
+                if (cb && cb.checked) {
+                    s.setProperty('background-color', BG_CHECKED, 'important');
+                    s.setProperty('border-color', BORDER_CHECKED, 'important');
+                }
+                label.querySelectorAll('span').forEach(sp => {
+                    sp.style.setProperty('color', FG, 'important');
+                    sp.style.setProperty('-webkit-text-fill-color', FG, 'important');
+                    sp.style.setProperty('font-size', '16px', 'important');
+                });
+            });
+        }
+        force();
+        new MutationObserver(force).observe(document.body, {childList: true, subtree: true});
+        let n = 0;
+        const iv = setInterval(() => { force(); if (++n >= 12) clearInterval(iv); }, 400);
+    })();
+    </script>
+    """
+
     demo = gr.Blocks(
         title="Retoka · Fotos de Identificación México",
+        head=retoka_dark_forcer_js,
     )
 
     with demo:
