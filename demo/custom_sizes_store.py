@@ -27,16 +27,66 @@ import threading
 from typing import Dict, Optional, Tuple
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
+# We try several paths in priority order so the data persists across HF
+# Space rebuilds whenever a persistent volume is available:
+#   1. /data   — HF Spaces persistent storage mount (set via Space settings
+#                → Storage → connect a Dataset). Survives every rebuild.
+#   2. HF_HOME / XDG_CACHE_HOME — Gradio's writable home (may persist
+#                depending on Space config).
+#   3. demo/custom_sizes.json  — fallback that lives inside the git repo;
+#                survives only if the user commits it manually.
+#   4. /tmp     — last-resort scratch (lost on rebuild, only good for
+#                the current session).
+def _candidate_paths():
+    paths = []
+    # 1. HF Space persistent storage (the one we really want)
+    if os.path.isdir("/data"):
+        paths.append("/data/custom_sizes.json")
+    # 2. Writable home cache
+    home = os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface")
+    if home and os.access(os.path.dirname(home) or home, os.W_OK):
+        paths.append(os.path.join(home, "retoka_custom_sizes.json"))
+    # 3. Local file (committed in git; safe across same commit, not across rebuilds)
+    paths.append(_STORE_PATH)
+    # 4. tmpfs fallback (session-only)
+    paths.append("/tmp/retoka_custom_sizes.json")
+    return paths
+
 _STORE_PATH = os.path.join(_HERE, "custom_sizes.json")
 _LOCK = threading.Lock()
+_ACTIVE_PATH = None  # set on first successful load/write
+
+
+def _resolve_path() -> str:
+    """Pick the first candidate path we can actually write to.
+    Caches the result in module state so we don't re-probe every call."""
+    global _ACTIVE_PATH
+    if _ACTIVE_PATH is not None:
+        return _ACTIVE_PATH
+    for path in _candidate_paths():
+        parent = os.path.dirname(path)
+        try:
+            os.makedirs(parent, exist_ok=True)
+            # Probe writability with a touch
+            with open(path, "a"):
+                pass
+            _ACTIVE_PATH = path
+            return path
+        except OSError:
+            continue
+    # Last-resort: in-process dict; nothing persistent but at least no crash
+    _ACTIVE_PATH = None
+    return None
 
 
 def _load() -> Dict[str, list]:
-    """Read the JSON file. Returns empty dict if missing or corrupted."""
-    if not os.path.exists(_STORE_PATH):
+    """Read the JSON file from the first available persistent path.
+    Returns empty dict if no path is writable."""
+    path = _resolve_path()
+    if path is None or not os.path.exists(path):
         return {}
     try:
-        with open(_STORE_PATH, "r", encoding="utf-8") as f:
+        with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, dict):
             return {}
@@ -45,17 +95,20 @@ def _load() -> Dict[str, list]:
         return {}
 
 
-def _save(data: Dict[str, list]) -> None:
-    """Atomically write the JSON file. Best-effort; silently swallows
-    write errors (e.g. read-only filesystem on a locked-down HF Space)."""
+def _save(data: Dict[str, list]) -> bool:
+    """Atomically write the JSON file to the first available persistent
+    path. Returns True on success, False if no writable path exists."""
+    path = _resolve_path()
+    if path is None:
+        return False
     try:
-        tmp = _STORE_PATH + ".tmp"
+        tmp = path + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
-        os.replace(tmp, _STORE_PATH)
+        os.replace(tmp, path)
+        return True
     except OSError:
-        # Filesystem not writable — caller falls back to in-memory state.
-        pass
+        return False
 
 
 def get_profile(
@@ -90,17 +143,12 @@ def set_profile(
     top_dist: float,
 ) -> bool:
     """Persist a custom profile for a size. Returns True if the file
-    was actually written (False if filesystem is read-only)."""
+    was actually written to a persistent path (False if no writable
+    path exists on this deployment)."""
     with _LOCK:
         data = _load()
         data[display_key] = [h, w, head_ratio, head_height, top_dist]
-        wrote = False
-        try:
-            _save(data)
-            wrote = True
-        except Exception:
-            pass
-        return wrote
+        return _save(data)
 
 
 def reset_profile(display_key: str) -> bool:
@@ -110,8 +158,7 @@ def reset_profile(display_key: str) -> bool:
         data = _load()
         if display_key in data:
             del data[display_key]
-            _save(data)
-            return True
+            return _save(data)
     return False
 
 
@@ -125,3 +172,9 @@ def list_custom() -> Dict[str, list]:
     """Snapshot of every size that has a custom override."""
     with _LOCK:
         return dict(_load())
+
+
+def active_path() -> str:
+    """Which storage path the next read/write will hit. Useful for
+    diagnostics in the UI (showing the user where their data lives)."""
+    return _resolve_path() or "(no writable path found)"

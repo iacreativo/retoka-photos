@@ -4,7 +4,7 @@ import pathlib
 from demo.locales import LOCALES
 from demo.processor import IDPhotoProcessor
 from demo.photo_requirements import render_requirements as render_reqs
-from demo.custom_sizes_store import get_profile, set_profile, reset_profile, has_custom
+from demo.custom_sizes_store import get_profile, set_profile, reset_profile, has_custom, active_path
 
 """
 只裁切模式:
@@ -1896,8 +1896,20 @@ def create_ui(
                 if not size_data or len(size_data) < 5:
                     return ""
                 h, w = int(size_data[0]), int(size_data[1])
-                set_profile(size_key, h, w, head_ratio, head_height, top_dist)
-                return LOCALES["size_saved_status"][DEFAULT_LANG]["label"]
+                wrote = set_profile(size_key, h, w, head_ratio, head_height, top_dist)
+                base = LOCALES["size_saved_status"][DEFAULT_LANG]["label"]
+                path = active_path()
+                # Tell the user where their data lives so they know if it
+                # survives HF rebuilds (/data = persistent, anything else
+                # under HF Spaces = may be lost on next rebuild).
+                persistent = path.startswith("/data") if path else False
+                note = (
+                    f"\n\n💾 Almacenado en: `{path}`" + (
+                        "" if persistent else
+                        "\n\n⚠️ **No persistente** — monta un HF Dataset en `/data` desde Settings → Storage para sobrevivir rebuilds."
+                    )
+                ) if path else "\n\n⚠️ Sin ruta escribible."
+                return (base if wrote else base + " (⚠️ no se pudo escribir)") + note
 
             # Cualquier cambio en los 3 sliders dispara el guardado
             for slider in (head_measure_ratio_option, head_height_ratio_option, top_distance_option):
