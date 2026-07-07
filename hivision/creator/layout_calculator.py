@@ -165,6 +165,14 @@ def generate_layout_image(
         )
 
     if crop_line:
+        # Calcular el bounding box real del bloque de fotos.
+        # En modo "half-left" / "half-right" esto acota las líneas de corte a la
+        # mitad ocupada, dejando la mitad reutilizable completamente limpia.
+        xs = [p[0] for p in typography_arr]
+        ys = [p[1] for p in typography_arr]
+        min_x, max_x = min(xs), max(xs) + width
+        min_y, max_y = min(ys), max(ys) + height
+
         # 添加裁剪线
         line_color = (200, 200, 200)  # 浅灰色
         line_thickness = 1
@@ -185,13 +193,13 @@ def generate_layout_image(
             if y + height not in horizontal_lines:
                 horizontal_lines.append(y + height)
 
-        # 绘制垂直裁剪线
+        # 绘制垂直裁剪线 (solo dentro del alto del bloque de fotos)
         for x in vertical_lines:
-            cv2.line(white_background, (x, 0), (x, LAYOUT_HEIGHT), line_color, line_thickness)
+            cv2.line(white_background, (x, min_y), (x, max_y), line_color, line_thickness)
 
-        # 绘制水平裁剪线
+        # 绘制水平裁剪线 (solo dentro del ancho del bloque de fotos)
         for y in horizontal_lines:
-            cv2.line(white_background, (0, y), (LAYOUT_WIDTH, y), line_color, line_thickness)
+            cv2.line(white_background, (min_x, y), (max_x, y), line_color, line_thickness)
 
     # 返回排版后的图像
     return white_background
