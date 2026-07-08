@@ -2,10 +2,36 @@
 # -*- coding: utf-8 -*-
 from PIL import Image
 import io
+import os
+import functools
 import numpy as np
 import cv2
 import base64
 from hivision.plugin.watermark import Watermarker, WatermarkerStyles
+
+
+# sRGB v4 ICC profile path (loaded lazily once and cached). Embedded in every
+# JPEG/PNG output so printers and color-managed software interpret the image
+# as sRGB instead of guessing.
+_SRGB_PROFILE_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "assets",
+    "sRGB_v4_ICC_preference.icc",
+)
+
+
+@functools.lru_cache(maxsize=1)
+def get_srgb_icc_profile() -> bytes | None:
+    """Return the bytes of the bundled sRGB v4 ICC profile, or None if missing.
+
+    Cached so we only hit the disk once per process. Returning None lets the
+    save() calls proceed without an icc_profile kwarg, preserving backwards
+    compatibility if the asset is ever removed.
+    """
+    if not os.path.exists(_SRGB_PROFILE_PATH):
+        return None
+    with open(_SRGB_PROFILE_PATH, "rb") as f:
+        return f.read()
 
 
 def save_image_dpi_to_bytes(image: np.ndarray, output_image_path: str = None, dpi: int = 300):
@@ -20,7 +46,11 @@ def save_image_dpi_to_bytes(image: np.ndarray, output_image_path: str = None, dp
     # 创建一个字节流对象
     byte_stream = io.BytesIO()
     # 将图像保存到字节流
-    image.save(byte_stream, format="PNG", dpi=(dpi, dpi))
+    _icc = get_srgb_icc_profile()
+    _save_kwargs = {"format": "PNG", "dpi": (dpi, dpi)}
+    if _icc:
+        _save_kwargs["icc_profile"] = _icc
+    image.save(byte_stream, **_save_kwargs)
     # 获取字节流的内容
     image_bytes = byte_stream.getvalue()
 
@@ -64,7 +94,11 @@ def resize_image_to_kb(input_image: np.ndarray, output_image_path: str = None, t
         img_byte_arr = io.BytesIO()
 
         # Save the image to the BytesIO object with the current quality
-        img.save(img_byte_arr, format="JPEG", quality=quality, dpi=(dpi, dpi))
+        _icc = get_srgb_icc_profile()
+        _save_kwargs = {"format": "JPEG", "quality": quality, "dpi": (dpi, dpi)}
+        if _icc:
+            _save_kwargs["icc_profile"] = _icc
+        img.save(img_byte_arr, **_save_kwargs)
 
         # Get the size of the image in KB
         img_size_kb = len(img_byte_arr.getvalue()) / 1024
@@ -125,7 +159,11 @@ def resize_image_to_kb_base64(input_image, target_size_kb, mode="exact"):
         img_byte_arr = io.BytesIO()
 
         # Save the image to the BytesIO object with the current quality
-        img.save(img_byte_arr, format="JPEG", quality=quality)
+        _icc = get_srgb_icc_profile()
+        _save_kwargs = {"format": "JPEG", "quality": quality}
+        if _icc:
+            _save_kwargs["icc_profile"] = _icc
+        img.save(img_byte_arr, **_save_kwargs)
 
         # Get the size of the image in KB
         img_size_kb = len(img_byte_arr.getvalue()) / 1024
@@ -209,13 +247,21 @@ def save_numpy_image(numpy_img, file_path):
         rgb_img = np.flip(numpy_img, axis=-1).astype(np.uint8)
         img = Image.fromarray(rgb_img, mode="RGB")
 
-    img.save(file_path)
+    _icc = get_srgb_icc_profile()
+    if _icc:
+        img.save(file_path, icc_profile=_icc)
+    else:
+        img.save(file_path)
 
 
 def numpy_to_bytes(numpy_img):
     img = Image.fromarray(numpy_img)
     img_byte_arr = io.BytesIO()
-    img.save(img_byte_arr, format="PNG")
+    _icc = get_srgb_icc_profile()
+    _save_kwargs = {"format": "PNG"}
+    if _icc:
+        _save_kwargs["icc_profile"] = _icc
+    img.save(img_byte_arr, **_save_kwargs)
     img_byte_arr.seek(0)
     return img_byte_arr
 
